@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.env*
+!.env.example
+*.tsbuildinfo
+supabase/.temp/
+supabase/.branches/
+.vercel/
+.DS_Store
+*.log
+*.pem
+*.key
+# Local QA evidence and one-off cleanup records are not application source.
+docs/verification/
+scripts/cleanup-e2e-*.sql
+/*-proof.jpg

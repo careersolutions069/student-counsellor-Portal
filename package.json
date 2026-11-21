@@ -1,0 +1,36 @@
+{
+  "name": "career-solution",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack --hostname 0.0.0.0",
+    "build": "next build --webpack",
+    "start": "next start --hostname 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "latest",
+    "@supabase/supabase-js": "latest",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "jose": "^6.1.0",
+    "lucide-react": "latest",
+    "next": "latest",
+    "radix-ui": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "tailwind-merge": "latest",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "tailwindcss": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}

@@ -1,0 +1,11 @@
+.git/
+.env*
+!.env.example
+.next/
+node_modules/
+docs/
+tests/
+scripts/
+supabase/
+*-proof.jpg
+*.tsbuildinfo

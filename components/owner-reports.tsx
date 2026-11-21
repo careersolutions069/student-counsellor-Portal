@@ -1,0 +1,30 @@
+import {loadOwnerReport} from '@/lib/owner-report-data';
+import {percent,formatINR,reportFilters,type ReportQuery} from '@/lib/owner-reports';
+import {Field,Select} from '@/components/fields';
+import {Button} from '@/components/ui/button';
+import {Badge} from '@/components/shell';
+function DateFilter({filters}:{filters:{branch:string|null;period:string;from:string;to:string}}) {
+ return (<form method="get" className="grid items-end gap-4 sm:grid-cols-2 xl:grid-cols-4"><input type="hidden" name="tab" value="reports"/><input type="hidden" name="branch" value={filters.branch||''}/>
+    <Select label="Report date range" name="period" defaultValue={filters.period}><option value="all">All Time</option><option value="month">This Month</option><option value="30">Last 30 Days</option><option value="7">Last 7 Days</option><option value="custom">Custom dates</option></Select>
+    <Field label="From · custom range" name="from" type="date" defaultValue={filters.from}/><Field label="To · custom range" name="to" type="date" defaultValue={filters.to}/><Button type="submit">Apply date range</Button>
+   </form>);
+}
+export async function OwnerReports({query}:{query:ReportQuery}) {
+ try {reportFilters(query);}catch {return <section className="panel space-y-5"><h2 className="section-title">Conversion &amp; Revenue Reports</h2><p role="alert" className="text-red-800">Choose a valid date range. Custom ranges require both dates, with From on or before To.</p><DateFilter filters={{branch:query.branch||null,period:query.period||'all',from:query.from||'',to:query.to||''}}/></section>;}
+ const {filters,report}=await loadOwnerReport(query);
+ const download=new URLSearchParams({period:filters.period});if(filters.branch)download.set('branch',filters.branch);if(filters.from)download.set('from',filters.from);if(filters.to)download.set('to',filters.to);
+ const allotted=report.phases.reduce((a,b)=>a+b,0);
+ return <div className="space-y-6">
+  <section className="panel space-y-5"><h2 className="section-title">Conversion &amp; Revenue Reports</h2>
+   <DateFilter filters={filters}/>
+   <p className="text-sm text-slate-500">{filters.from?`Enquiries received ${filters.from} through ${filters.to} (IST).`:'All enquiry dates.'} Outcomes show the current progress of those leads in active branches. Counselling Amount Collected sums recorded counselling amounts; it is not a payment reconciliation report.</p>
+  </section>
+  <section className="panel space-y-5"><div className="flex flex-wrap items-center justify-between gap-4"><h2 className="section-title">Branch Revenue &amp; Conversion</h2><Button asChild variant="outline"><a href={`/owner/reports?${download}`}>Download Branch Report (.csv)</a></Button></div>
+   <div className="overflow-x-auto"><table className="w-full text-left text-sm"><caption className="sr-only">Branch conversion and recorded counselling revenue for the selected enquiry dates</caption><thead><tr>{['Branch','Total Enquiries','F2F Invited','Visits Attended / Converted','Visit Conversion %','Registered IDs','Colleges Allotted','Counselling Amount Collected'].map(h=><th scope="col" key={h} className="min-w-32 p-3">{h}</th>)}</tr></thead><tbody>{[...report.branches,report.total].map(row=><tr key={row.branch_id||'total'} className={`border-t border-slate-200 ${row.branch_id?'':'bg-teal-50 font-semibold'}`}><th scope="row" className="p-3">{row.name}<span className="block text-xs text-slate-500">{row.code}</span></th>{[row.enquiries,row.invited,row.attended,`${percent(row.attended,row.enquiries)}%`,row.registered,row.allotted,formatINR(row.amount)].map((value,i)=><td key={i} className="p-3">{value}</td>)}</tr>)}</tbody></table></div>
+  </section>
+  <section className="panel space-y-5"><h2 className="section-title">Tele-Counsellor Invite &amp; Conversion Performance</h2><p className="text-sm text-slate-500">Assigned Leads uses current assignments. Calls are credited to the caller who logged them; invites and attended visits count unique students per meeting creator. Repeat appointments do not inflate conversion counts. Invite Rate can exceed 100% after reassignment.</p>
+   <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr>{['Counsellor Name','Branch','Assigned Leads','Calls Logged','Invites Arranged','Visits Attended','Invite Rate %','Visit Show-Up %'].map(h=><th scope="col" key={h} className="min-w-32 p-3">{h}</th>)}</tr></thead><tbody>{report.callers.map(row=><tr key={row.id} className="border-t border-slate-200"><th scope="row" className="p-3">{row.name}{!row.is_active&&<span className="block text-xs text-slate-500">Inactive</span>}</th>{[row.branch,row.assigned,row.calls,row.invites,row.attended,`${percent(row.invites,row.assigned)}%`,`${percent(row.attended,row.invites)}%`].map((value,i)=><td key={i} className="p-3">{value}</td>)}</tr>)}</tbody></table></div>{!report.callers.length&&<p className="text-sm text-slate-500">No tele-counsellors in the selected active branches.</p>}
+  </section>
+  <section className="panel space-y-5"><h2 className="section-title">Phase-Wise Allotment Breakdown</h2><p className="text-sm text-slate-500">{allotted} colleges allotted in the selected enquiry group.</p><div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{report.phases.map((count,index)=><div key={index}><div className="mb-2 flex justify-between text-sm"><span>Phase {index+1}</span><strong>{count}</strong></div><progress className="h-3 w-full accent-teal-700" max={allotted||1} value={count} aria-label={`Phase ${index+1} allotments`}/></div>)}</div><div className="flex flex-wrap gap-3"><Badge>New College Choice uploads: {report.new_choices}</Badge><Badge>New College allotments: {report.new_allotments}</Badge><Badge>Upgrade College uploads: {report.upgrade_choices}</Badge><Badge>Upgrade allotments: {report.upgrade_allotments}</Badge><Badge>In Counselling (Not Yet Allotted): {report.in_counselling}</Badge></div></section>
+ </div>;
+}

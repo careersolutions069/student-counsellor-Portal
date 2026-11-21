@@ -1,0 +1,94 @@
+// Local seeded Supabase + Next dev server only. Never targets a hosted project.
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+const { encodeReply }=createRequire(import.meta.url)('next/dist/compiled/react-server-dom-webpack/client.node');
+import { signStudentSession,hash,newSessionToken } from '../lib/session.ts';
+process.loadEnvFile('.env.local');
+const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
+assert.ok(['localhost','127.0.0.1'].includes(new URL(url).hostname),'Local database required');
+const options={auth:{persistSession:false,autoRefreshToken:false}};
+const admin=createClient(url,process.env.SUPABASE_SERVICE_ROLE_KEY,options);
+const anon=createClient(url,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,options);
+const jar=new Map();
+const head=createServerClient(url,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,{cookies:{getAll:()=>Array.from(jar,([name,value])=>({name,value})),setAll:items=>items.forEach(({name,value})=>jar.set(name,value))}});
+const bucket=admin.storage.from('student-documents');
+const student='30000000-0000-4000-8000-000000000001';
+const branch='10000000-0000-4000-8000-000000000001';
+const actor='20000000-0000-4000-8000-000000000002';
+const id=randomUUID(),foreign=randomUUID(),objects=[];
+const session=newSessionToken();
+let previousAllow=false;
+function ok(result,label) {if(result.error) throw new Error(`${label}: ${result.error.message}`);return result.data;}
+try {
+ ok(await head.auth.signInWithPassword({email:'patna.head@career.test',password:'CareerDemo!2026'}),'Head login');
+ previousAllow=ok(await head.from('students').select('allow_student_upload').eq('id',student).single(),'Read prior permission').allow_student_upload;
+ ok(await head.from('student_documents').insert({id,student_id:student,branch_id:branch,document_name:`API fixture ${id}` }),'Create own checklist');
+ ok(await admin.from('student_documents').insert({id:foreign,student_id:'30000000-0000-4000-8000-000000000003',branch_id:'10000000-0000-4000-8000-000000000002',document_name:`API fixture ${foreign}` }),'Foreign fixture');
+ ok(await admin.rpc('student_login',{reg:'CS-PAT-2026-0001',birth_date:'2007-05-12',ip_hash:hash('document-api-fixture'),session_hash:hash(session)}),'Student session');
+ const cookie=`cs_student=${await signStudentSession(student,session)}`;
+ const staffCookie=Array.from(jar,([name,value])=>`${name}=${value}`).join('; ');
+ await fetch('http://localhost:3000/branch',{headers:{cookie:staffCookie}});
+ const manifest=JSON.parse(await readFile('.next/dev/server/server-reference-manifest.json','utf8')).node;
+ async function uploadAction(studentActor,bytes,mime='application/pdf') {
+  const latest=ok(await head.from('student_documents').select('updated_at').eq('id',id).single(),'Read current file version');
+  const form=new FormData();form.set('document_id',id);form.set('updated_at',latest.updated_at);form.set('file',new Blob([bytes],{type:mime}),'action.pdf');
+  const action=Object.entries(manifest).find(([,value])=>value.exportedName===(studentActor?'uploadStudentDocument':'uploadStaffDocument'))[0];
+  const body=await encodeReply([{},form]);assert.ok((await new Response(body).blob()).size<4500000,'Multipart body stays below 4.5 MB');
+  const result=await fetch(`http://localhost:3000/${studentActor?'student':'branch'}`,{method:'POST',headers:{'Next-Action':action,origin:'http://localhost:3000',cookie:studentActor?cookie:staffCookie},body:body});
+  if(result.status!==200) throw new Error(`Server action ${result.status}: ${(await result.text()).slice(0,500)}`);
+  return result.text();
+ }
+
+ const path=`${student}/${id}/${randomUUID()}.pdf`;
+ ok(await bucket.upload(path,Buffer.from('%PDF-1.7\nlocal document fixture'),{contentType:'application/pdf'}),'Private file upload');objects.push(path);
+ const doc=ok(await admin.from('student_documents').select('updated_at').eq('id',id).single(),'Read upload version');
+ ok(await admin.rpc('finalize_document_upload',{document_id:id,new_path:path,new_name:'local-fixture.pdf',new_status:'Uploaded',expected_updated_at:doc.updated_at,staff_actor:actor}),'Staff finalize');
+ assert.ok((await anon.storage.from('student-documents').download(path)).error,'Anon must not download private object');
+ assert.ok((await head.storage.from('student-documents').download(path)).error,'Staff browser must use Next route');
+ let response=await fetch(`http://localhost:3000/documents/${id}?as=student`,{redirect:'manual'});
+ assert.equal(response.status,401,'Unsigned route denied');
+ response=await fetch(`http://localhost:3000/documents/${foreign}?as=student`,{headers:{cookie},redirect:'manual'});
+ assert.equal(response.status,404,'Other student document denied');
+ response=await fetch(`http://localhost:3000/documents/${id}?as=student`,{headers:{cookie},redirect:'manual'});
+ assert.equal(response.status,303,'Own document route authorizes');
+ assert.ok(response.headers.get('cache-control').includes('no-store'));
+ const signed=response.headers.get('location');
+ const token=new URL(signed).searchParams.get('token');
+ const claims=JSON.parse(Buffer.from(token.split('.')[1],'base64url').toString());
+ assert.ok(claims.exp-Date.now()/1000<=65,'Viewing URL expires within a minute');
+ assert.equal(await (await fetch(signed)).text(),'%PDF-1.7\nlocal document fixture','Signed URL serves the correct file');
+ ok(await head.from('students').update({allow_student_upload:false}).eq('id',student),'Disable uploads');
+ assert.ok((await admin.rpc('document_access',{document_id:id,target_student:student,session_hash:hash(session),for_upload:true})).error,'Disabled upload denied');
+ ok(await head.from('students').update({allow_student_upload:true}).eq('id',student),'Enable uploads');
+ ok(await admin.rpc('document_access',{document_id:id,target_student:student,session_hash:hash(session),for_upload:true}),'Enabled student access');
+ assert.ok((await uploadAction(true,Buffer.from('<html>spoof</html>'))).includes('Choose a valid PDF'),'Next action rejects spoofed PDF');
+ const oversized=new Uint8Array(4*1024*1024+1);oversized.set(Buffer.from('%PDF-1.7\n'));
+ for(const studentActor of [false,true]) assert.ok((await uploadAction(studentActor,oversized)).includes('File must be 4 MB or smaller'),'Oversized file rejected cleanly before storage');
+ assert.equal(ok(await head.from('student_documents').select('file_path').eq('id',id).single(),'Unchanged rejected file').file_path,path);
+ const rejectedPath=`${student}/${id}/${randomUUID()}.pdf`;
+ const rejected=await bucket.upload(rejectedPath,oversized,{contentType:'application/pdf'});
+ if(!rejected.error)objects.push(rejectedPath);
+ assert.ok(rejected.error,'Storage rejects files larger than 4 MiB too');
+ const maxPdf=new Uint8Array(4*1024*1024);maxPdf.set(Buffer.from('%PDF-1.7\n'));
+ assert.ok((await uploadAction(false,maxPdf)).includes('Document uploaded successfully.'),'Next action accepts full 4 MiB staff upload');
+ objects.push(ok(await head.from('student_documents').select('file_path').eq('id',id).single(),'Staff uploaded path').file_path);
+ assert.ok((await uploadAction(true,maxPdf)).includes('Document uploaded successfully.'),'Next action accepts permitted student replacement');
+ const uploaded=ok(await head.from('student_documents').select('file_path,uploaded_by_role,status').eq('id',id).single(),'Student upload saved');
+ objects.push(uploaded.file_path);assert.equal(uploaded.uploaded_by_role,'student');assert.equal(uploaded.status,'Uploaded');
+ ok(await head.from('student_documents').update({status:'Verified'}).eq('id',id),'Head verifies');
+ assert.ok((await admin.rpc('document_access',{document_id:id,target_student:student,session_hash:hash(session),for_upload:true})).error,'Verified replacement denied');
+ ok(await admin.rpc('student_logout',{session_hash:hash(session)}),'Revoke student session');
+ response=await fetch(`http://localhost:3000/documents/${id}?as=student`,{headers:{cookie},redirect:'manual'});
+ assert.equal(response.status,404,'Revoked DB session denied despite signed cookie');
+ console.log('PASS private storage, staff/cookie authorization, cross-student denial, 60s signed viewing, Next action MIME validation, full 4 MiB upload, student replacement, verification and revoked sessions');
+} finally {
+ await admin.rpc('student_logout',{session_hash:hash(session)});
+ await head.from('students').update({allow_student_upload:previousAllow}).eq('id',student);
+ await admin.from('student_documents').delete().in('id',[id,foreign]);
+ if(objects.length) await bucket.remove(objects);
+ await head.auth.signOut({scope:'local'});
+}

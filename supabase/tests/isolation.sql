@@ -1,0 +1,54 @@
+-- Run after local reset. Every write rolls back.
+begin;
+create function pg_temp.check_ok(value boolean, message text) returns void language plpgsql as $$ begin if value is distinct from true then raise exception 'FAILED: %',message; end if; end $$;
+select pg_temp.check_ok((select count(*)=14 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity),'RLS enabled on all fourteen tables');
+update public.students set "F/N"='Fixture parent',city='Patna',state='Bihar',counselling_amount=1000,percentage_or_score='610',marks_type='exact',selected_courses=array['MBBS'],college_type='government',college_pdf_path=branch_id::text||'/'||id::text||'/college-registration/test.pdf',college_pdf_name='test.pdf',visit_details_completed=true where id in ('30000000-0000-4000-8000-000000000002','30000000-0000-4000-8000-000000000004');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000002',true);
+select pg_temp.check_ok((select count(*)=2 from public.students),'Patna head sees only two Patna students');
+select pg_temp.check_ok((select count(*)=1 from public.branches),'Patna head sees one branch');
+select pg_temp.check_ok((select count(*)=2 from public.staff_profiles),'Patna head sees own branch staff');
+select pg_temp.check_ok((select count(*)=0 from public.students where branch_id='10000000-0000-4000-8000-000000000002'),'Bangalore invisible');
+do $$ begin
+ begin
+  insert into public.students(branch_id,full_name,student_phone) values('10000000-0000-4000-8000-000000000002','Blocked','9999999999');
+  raise exception 'FAILED: cross-branch insert allowed';
+ exception when insufficient_privilege then null; end;
+end $$;
+select pg_temp.check_ok(public.complete_student_profile('30000000-0000-4000-8000-000000000002','Rahul Kumar','9000000002','2007-01-02') ~ '^CS-PAT-[0-9]{4}-[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$','Profile completion generates ID');
+select pg_temp.check_ok(public.complete_student_profile('30000000-0000-4000-8000-000000000002','Rahul Kumar','9000000002','2007-01-02')=(select registration_number from public.students where student_phone='9000000002'),'Completion retry keeps ID');
+select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000004',true);
+select pg_temp.check_ok((select count(*)=1 from public.students),'Caller sees only one assigned student');
+update public.students set pipeline_stage='Contacted' where id='30000000-0000-4000-8000-000000000001';
+select pg_temp.check_ok((select pipeline_stage='Contacted' from public.students where id='30000000-0000-4000-8000-000000000001'),'Caller can edit assigned student');
+reset role;
+update public.staff_profiles set is_active=false where id='20000000-0000-4000-8000-000000000004';
+set local role authenticated;
+select pg_temp.check_ok((select count(*)=0 from public.students),'Deactivated caller immediately loses visibility');
+reset role;
+set local role anon;
+do $$ begin
+ begin perform * from public.call_logs; raise exception 'FAILED: anon read internal notes'; exception when insufficient_privilege then null; end;
+ begin perform public.student_portal('30000000-0000-4000-8000-000000000001','token'); raise exception 'FAILED: anon executed portal'; exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+set local role service_role;
+select pg_temp.check_ok(public.student_login('cs-pat-2026-0001','2007-05-12','test-ip','test-token')->>'student_id'='30000000-0000-4000-8000-000000000001','Student login case insensitive');
+select pg_temp.check_ok(public.student_portal('30000000-0000-4000-8000-000000000001','test-token') is not null,'Valid student session reads projection');
+select pg_temp.check_ok(public.student_portal('30000000-0000-4000-8000-000000000003','test-token') is null,'Session cannot access another student');
+select pg_temp.check_ok(public.student_portal('30000000-0000-4000-8000-000000000001','wrong-token') is null,'Invalid session denied');
+select pg_temp.check_ok(public.student_portal('30000000-0000-4000-8000-000000000001','test-token')::text not like '%INTERNAL%' and not (public.student_portal('30000000-0000-4000-8000-000000000001','test-token') ? 'call_logs'),'Internal notes and unshared shortlist absent');
+select public.student_login('CS-BLR-2026-0001','1999-01-01','rate-test','bad-token') from generate_series(1,5);
+select pg_temp.check_ok(public.student_login('CS-BLR-2026-0001','2006-08-23','other-ip','new-token')->>'error' like 'Too many%','Five failures lock registration even across IPs');
+select pg_temp.check_ok(public.student_login('CS-PAT-2026-0001','2007-05-12','rate-test','new-token')->>'error' like 'Too many%','Five failures lock IP across registrations');
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
+select public.transfer_student('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002');
+set constraints all immediate;
+select pg_temp.check_ok((select assigned_to is null and branch_id='10000000-0000-4000-8000-000000000002' from public.students where id='30000000-0000-4000-8000-000000000001'),'Transfer clears assignment');
+select pg_temp.check_ok((select branch_id='10000000-0000-4000-8000-000000000002' from public.call_logs where student_id='30000000-0000-4000-8000-000000000001'),'Transfer moves internal history consistently');
+reset role;
+set local role service_role;
+select pg_temp.check_ok(public.student_portal('30000000-0000-4000-8000-000000000001','test-token') is null,'Transfer revokes student sessions');
+rollback;
