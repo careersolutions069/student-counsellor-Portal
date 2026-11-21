@@ -6,6 +6,6 @@ node_modules/
 docs/
 tests/
 scripts/
-supabase/
+/supabase/
 *-proof.jpg
 *.tsbuildinfo
