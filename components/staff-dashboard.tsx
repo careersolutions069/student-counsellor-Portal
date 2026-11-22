@@ -17,6 +17,7 @@ import { History, type Transfer, type HistoryStudent } from "@/components/histor
 import { Field, Select } from "@/components/fields";
 import { Button } from "@/components/ui/button";
 import { StudentTransfer } from "@/components/student-transfer";
+import { NavigationPending } from "@/components/navigation-pending";
 import { indiaDayBounds } from "@/lib/validation";
 export type DashboardFilters = {
   branch?: string;
@@ -95,21 +96,44 @@ export async function StaffDashboard({
       `full_name.ilike.%${queryText}%,student_phone.ilike.%${queryText}%,parent_phone.ilike.%${queryText}%,registration_number.ilike.%${queryText}%`,
     );
   if (stage && tab === "students") studentsQuery = studentsQuery.eq("pipeline_stage", stage);
-  const [branchResult, staffResult, studentResult, kpiResult, branchCounts] =
+  let meetingsQuery = client
+    .from("appointments")
+    .select("*", { count: "exact" })
+    .order("scheduled_at")
+    .order("id")
+    .range((page - 1) * 25, page * 25 - 1);
+  let transferQuery = client
+    .from("branch_transfers")
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .order("id")
+    .range((page - 1) * 25, page * 25 - 1);
+  if (selectedBranch) {
+    meetingsQuery = meetingsQuery.eq("branch_id", selectedBranch);
+    transferQuery = transferQuery.or(
+      `from_branch_id.eq.${selectedBranch},to_branch_id.eq.${selectedBranch}`,
+    );
+  }
+  const [branchResult, staffResult, studentResult, kpiResult, branchCounts, meetingResult, transferResult] =
     await Promise.all([
       branchesQuery,
-      staffQuery,
-      studentsQuery,
+      tab === "students" || tab === "staff" || tab === "history" ? staffQuery : null,
+      tab === "students" || (owner && tab === "history") ? studentsQuery : null,
       client.rpc("dashboard_kpis", { selected_branch: selectedBranch }),
-      client.rpc("branch_student_counts"),
+      tab === "branches" ? client.rpc("branch_student_counts") : null,
+      tab === "appointments"
+        ? meetingsQuery.or(`status.eq.scheduled,scheduled_at.gte.${indiaDayBounds().start}`)
+        : null,
+      tab === "history" ? transferQuery : null,
     ]);
   if (
-    [branchResult, staffResult, studentResult, kpiResult, branchCounts].some((r) => r.error)
+    [branchResult, staffResult, studentResult, kpiResult, branchCounts].some((r) => r?.error)
   )
     throw new Error("Unable to load dashboard records.");
-  const branches = (branchResult.data || []).map(b => ({...b, students: [{count: Number(branchCounts.data?.find((c: {branch_id: string}) => c.branch_id === b.id)?.total || 0)}]})) as Branch[];
-  const members = staffResult.data as Staff[];
-  const students = studentResult.data as Student[];
+  const branches = (branchResult.data || []).map(b => ({...b, students: [{count: Number(branchCounts?.data?.find((c: {branch_id: string}) => c.branch_id === b.id)?.total || 0)}]})) as Branch[];
+  const members = (staffResult?.data || []) as Staff[];
+  const students = (studentResult?.data || []) as Student[];
+  const studentCount = studentResult?.count || 0;
   const kpis = kpiResult.data as {
     total_leads: number;
     f2f_attended: number;
@@ -123,7 +147,7 @@ export async function StaffDashboard({
   let meetings: Meeting[] = [];
   let transfers: Transfer[] = [];
   let historyStudents: HistoryStudent[] = [];
-  let recordCount = studentResult.count || 0;
+  let recordCount = studentCount;
   if (tab === "students" && students.length) {
     const ids = students.map((s) => s.id);
     const result = await Promise.all([
@@ -153,17 +177,8 @@ export async function StaffDashboard({
       Activity[],
     ];
   }
-  if (tab === "appointments") {
-    const { start } = indiaDayBounds();
-    let query = client
-      .from("appointments")
-      .select("*", { count: "exact" })
-      .or(`status.eq.scheduled,scheduled_at.gte.${start}`)
-      .order("scheduled_at")
-      .order("id")
-      .range((page - 1) * 25, page * 25 - 1);
-    if (selectedBranch) query = query.eq("branch_id", selectedBranch);
-    const result = await query;
+  if (meetingResult) {
+    const result = meetingResult;
     if (result.error) throw new Error("Unable to load appointments.");
     const ids = [...new Set((result.data || []).map(m => m.student_id))];
     const profiles = ids.length ? await client.rpc("managed_students").in("id", ids) : {data: [], error: null};
@@ -171,19 +186,8 @@ export async function StaffDashboard({
     meetings = (result.data || []).map(m => ({...m, students: (profiles.data as Student[]).find(s => s.id === m.student_id) || null})) as Meeting[];
     recordCount = result.count || 0;
   }
-  if (tab === "history") {
-    let transferQuery = client
-      .from("branch_transfers")
-      .select("*", { count: "exact" })
-      .order("created_at", { ascending: false })
-      .order("id")
-      .range((page - 1) * 25, page * 25 - 1);
-    if (selectedBranch) {
-      transferQuery = transferQuery.or(
-        `from_branch_id.eq.${selectedBranch},to_branch_id.eq.${selectedBranch}`,
-      );
-    }
-    const result = await transferQuery;
+  if (transferResult) {
+    const result = transferResult;
     if (result.error) throw new Error("Unable to load transfers.");
     transfers = result.data as Transfer[];
     const ids = [...new Set(transfers.map(t=>t.student_id))];
@@ -229,6 +233,7 @@ export async function StaffDashboard({
               className={`flex min-h-11 items-center rounded-lg px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300 ${tab === key ? "bg-teal-700 text-white" : "text-slate-200 hover:bg-white/10 hover:text-white"}`}
             >
               {label}
+              <NavigationPending />
             </Link>
           ))}
         </div>
@@ -318,7 +323,7 @@ export async function StaffDashboard({
           />
         </>
       )}
-      {tab === "reports" && owner && <OwnerReports query={{...filters, branch: selectedBranch || undefined}} />}
+      {tab === "reports" && owner && <OwnerReports client={client} query={{...filters, branch: selectedBranch || undefined}} />}
       {tab === "staff" && (
         <StaffManagement members={members} branches={branches} owner={owner} />
       )}
@@ -328,7 +333,7 @@ export async function StaffDashboard({
         <>
           {owner ? <section className="panel space-y-5"><h2 className="section-title">Transfer student</h2><p className="text-sm text-slate-500">Find the student, choose an active destination branch, and enter a reason.</p>
             <form method="get" className="flex flex-wrap items-end gap-3"><input type="hidden" name="tab" value="history"/><input type="hidden" name="branch" value={selectedBranch || ""}/><div className="min-w-0 flex-1"><Field label="Find student" name="q" defaultValue={queryText} placeholder="Name, phone or registration number" maxLength={100}/></div><Button type="submit" variant="outline">Find students</Button></form>
-            <p className="text-sm text-slate-500">{studentResult.count || 0} matching students.{(studentResult.count || 0)>25 ? " Showing the first 25. Refine your search to find another student." : ""}</p>
+            <p className="text-sm text-slate-500">{studentCount} matching students.{studentCount > 25 ? " Showing the first 25. Refine your search to find another student." : ""}</p>
             <StudentTransfer students={students.map(s=>({id:s.id,branch_id:s.branch_id,full_name:s.full_name,student_phone:s.student_phone,registration_number:s.registration_number}))} branches={branches}/>
           </section> : <section className="panel space-y-3"><h2 className="section-title">Student transfers</h2><p className="text-sm text-slate-600">Only the Owner can transfer students between branches. Contact the Owner to arrange a transfer. Transfers involving your branch appear below.</p></section>}
           <History transfers={transfers} branches={branches} staff={members} students={historyStudents}/>

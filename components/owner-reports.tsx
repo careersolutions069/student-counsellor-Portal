@@ -9,9 +9,9 @@ function DateFilter({filters}:{filters:{branch:string|null;period:string;from:st
     <Field label="From · custom range" name="from" type="date" defaultValue={filters.from}/><Field label="To · custom range" name="to" type="date" defaultValue={filters.to}/><Button type="submit">Apply date range</Button>
    </form>);
 }
-export async function OwnerReports({query}:{query:ReportQuery}) {
+export async function OwnerReports({client,query}:{client:Parameters<typeof loadOwnerReport>[0];query:ReportQuery}) {
  try {reportFilters(query);}catch {return <section className="panel space-y-5"><h2 className="section-title">Conversion &amp; Revenue Reports</h2><p role="alert" className="text-red-800">Choose a valid date range. Custom ranges require both dates, with From on or before To.</p><DateFilter filters={{branch:query.branch||null,period:query.period||'all',from:query.from||'',to:query.to||''}}/></section>;}
- const {filters,report}=await loadOwnerReport(query);
+ const {filters,report}=await loadOwnerReport(client,query);
  const download=new URLSearchParams({period:filters.period});if(filters.branch)download.set('branch',filters.branch);if(filters.from)download.set('from',filters.from);if(filters.to)download.set('to',filters.to);
  const allotted=report.phases.reduce((a,b)=>a+b,0);
  return <div className="space-y-6">

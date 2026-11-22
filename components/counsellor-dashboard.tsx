@@ -3,6 +3,7 @@ import { requireStaff } from "@/lib/auth";
 import { Shell, PageTitle } from "@/components/shell";
 import { CounsellorCard } from "@/components/counsellor-card";
 import { Button } from "@/components/ui/button";
+import { NavigationPending } from "@/components/navigation-pending";
 import type { CallerLead, CallerBranch } from "@/lib/counsellor";
 export async function CounsellorDashboard({
   tab,
@@ -54,6 +55,7 @@ export async function CounsellorDashboard({
             className={`flex items-center justify-between gap-3 rounded-xl border p-4 text-sm font-semibold ${queue === key ? "border-teal-800 bg-teal-800 text-white" : "border-slate-200 bg-white text-slate-700"}`}
           >
             <span>{label}</span>
+            <NavigationPending />
             <span className="rounded-md bg-slate-100/20 px-2 py-1">
               {data.counts[key] || 0}
             </span>

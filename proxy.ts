@@ -1,7 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { STUDENT_COOKIE, verifyStudentSession } from "@/lib/session";
-import { destinations, type Role } from "@/lib/auth";
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   response.headers.set("Cache-Control", "private, no-store");
@@ -41,25 +40,9 @@ export async function proxy(request: NextRequest) {
       },
     },
   );
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-  if (!user) return login();
-  const { data: staff } = await client
-    .from("staff_profiles")
-    .select("role,is_active")
-    .eq("id", user.id)
-    .eq("is_active", true)
-    .single();
-  if (!staff) return login();
-  const destination = destinations[staff.role as Role];
-  if (!destination) return login();
-  if (!(path === destination || path.startsWith(destination + "/"))) {
-    const result = NextResponse.redirect(new URL(destination, request.url));
-    response.cookies.getAll().forEach((cookie) => result.cookies.set(cookie));
-    return result;
-  }
-  return response;
+  // Refresh the session here. Pages and actions check the current user and staff role.
+  const { data } = await client.auth.getClaims();
+  return data?.claims.sub ? response : login();
 }
 export const config = {
   matcher: [
