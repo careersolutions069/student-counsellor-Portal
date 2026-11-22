@@ -167,7 +167,7 @@ export async function createStaff(
       .object({
         full_name: name,
         email: z.email(),
-        password: z.string().min(12).max(128),
+        password: z.string().min(8).max(128),
         role: z.enum(["centre_head", "tele_counsellor"]),
         branch_id: uuid,
       })

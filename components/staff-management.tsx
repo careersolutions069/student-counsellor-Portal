@@ -34,10 +34,10 @@ function StaffFields({
         <>
           <Field label="Email address" name="email" type="email" required />
           <Field
-            label="Temporary password · 12+ characters"
+            label="Temporary password · 8+ characters"
             name="password"
             type="password"
-            minLength={12}
+            minLength={8}
             autoComplete="new-password"
             required
           />
