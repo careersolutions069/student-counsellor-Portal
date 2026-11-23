@@ -23,6 +23,8 @@ test('branch report keeps attendance and visit details separate and labels inact
  assert.deepEqual(lines[0].slice(3,8),['Total Enquiries','F2F Invited','Visits Attended','Visit Details Completed','Visit Details Completed % of Enquiries']);
  assert.deepEqual(lines[1].slice(0,8),['Patna','PAT','Active','4','3','1','2','50']);
  assert.deepEqual(lines[2].slice(0,8),['Old Branch','OLD','Inactive','2','1','1','0','0']);
- assert.deepEqual(lines[3].slice(2,8),['All branches','6','4','2','2','33.33']);
+ assert.deepEqual(lines[3].slice(0,8),['All-India Total','ALL','','6','4','2','2','33.33']);
+ const scopedTotal={...rows[1],branch_id:null,name:'Selected Branch Total',code:''};
+ assert.match(branchReportCsv([rows[1],scopedTotal]),/^"Selected Branch Total","","","2"/m);
  assert.equal(lines.slice(1,3).reduce((sum,line)=>sum+Number(line[5]),0),Number(lines[3][5]),'Total attended equals the sum of branch rows');
 });

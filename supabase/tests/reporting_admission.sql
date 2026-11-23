@@ -56,6 +56,7 @@ do $$declare r jsonb;b jsonb;begin
  perform pg_temp.check_ok(exists(select 1 from jsonb_array_elements(r->'callers') where value->>'id'='20000000-0000-4000-8000-000000000005'),'Inactive branch counsellors stay in history');
  r=public.owner_conversion_report('10000000-0000-4000-8000-000000000002');
  perform pg_temp.check_ok(jsonb_array_length(r->'branches')=1 and (r->'total'->>'enquiries')::int=2 and (r->'total'->>'attended')::int=1,'Owner can filter to an inactive branch');
+ perform pg_temp.check_ok(r->'total'->>'name'='Selected Branch Total' and r->'total'->>'code'='','Filtered total identifies its scope');
  perform pg_temp.check_ok((public.dashboard_kpis('10000000-0000-4000-8000-000000000002')->>'f2f_attended')::int=1,'Dashboard still reports the inactive branch');
 end$$;
 -- Existing deactivation rules are unchanged: imports into an inactive branch are blocked.
@@ -78,11 +79,12 @@ create temp table backfill_fixture(original text,expected text,admission_status 
 insert into backfill_fixture(original,expected) values
  ('Confirmed','Admission Confirmed'),(' admitted ','Admission Confirmed'),('Admission Confirmed','Admission Confirmed'),('ADMISSION   CONFIRMED','Admission Confirmed'),
  ('Application Submitted','Applied'),('applied','Applied'),('Pending','Pending'),('','Pending'),(null,'Pending'),('Not Admitted','Not Admitted'),('Withdrawn','Withdrawn'),
+ (E'\tConfirmed\n','Admission Confirmed'),(E'\t\n','Pending'),
  ('Shortlisted',null),('Under review',null),('Not confirmed',null),('Admission Confirmed Pending',null),('Verbally confirmed',null);
 update backfill_fixture set admission_status=original;
 -- Same expression as the migration backfill.
 update backfill_fixture set legacy_admission_status=case when private.normalize_admission_status(admission_status) is null then admission_status end,admission_status=private.normalize_admission_status(admission_status);
-select pg_temp.check_ok((select count(*)=16 and bool_and(admission_status is not distinct from expected) from backfill_fixture),'Recognized legacy values normalize');
+select pg_temp.check_ok((select count(*)=18 and bool_and(admission_status is not distinct from expected) from backfill_fixture),'Recognized legacy values normalize');
 select pg_temp.check_ok((select bool_and((expected is null and legacy_admission_status=original and admission_status is null) or (expected is not null and legacy_admission_status is null)) from backfill_fixture),'Unknown values keep their original text and never become confirmed');
 
 -- New writes: only canonical statuses are accepted.

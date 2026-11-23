@@ -11,7 +11,7 @@
 alter table public.shortlists_and_admissions add column legacy_admission_status text;
 
 create function private.normalize_admission_status(value text) returns text language sql immutable set search_path='' as $$
- select case lower(regexp_replace(btrim(coalesce(value,'')),'\s+',' ','g'))
+ select case lower(btrim(regexp_replace(coalesce(value,''),'\s+',' ','g')))
   when '' then 'Pending'
   when 'pending' then 'Pending'
   when 'applied' then 'Applied'
@@ -93,7 +93,10 @@ begin
  doc_counts as(select count(distinct d.student_id) filter(where d.doc_category='new_choice_pdf') as new_choices,count(distinct d.student_id) filter(where d.doc_category='new_allotment_letter') as new_allotments,count(distinct d.student_id) filter(where d.doc_category='upgrade_choice_pdf') as upgrade_choices,count(distinct d.student_id) filter(where d.doc_category='upgraded_allotment_letter') as upgrade_allotments from public.counselling_documents d join leads s on s.id=d.student_id)
  select jsonb_build_object(
  'branches',coalesce((select jsonb_agg(to_jsonb(r)||jsonb_build_object('amount',r.amount::text) order by r.is_active desc,r.name,r.branch_id) from branch_rows r),'[]'),
- 'total',(select jsonb_build_object('branch_id',null,'name','All-India Total','code','ALL','is_active',true,'enquiries',coalesce(sum(enquiries),0),'invited',coalesce(sum(invited),0),'attended',coalesce(sum(attended),0),'visit_details',coalesce(sum(visit_details),0),'registered',coalesce(sum(registered),0),'allotted',coalesce(sum(allotted),0),'amount',coalesce(sum(amount),0)::text) from branch_rows),
+ 'total',(select jsonb_build_object('branch_id',null,
+   'name',case when selected_branch is null then 'All-India Total' else 'Selected Branch Total' end,
+   'code',case when selected_branch is null then 'ALL' else '' end,
+   'is_active',true,'enquiries',coalesce(sum(enquiries),0),'invited',coalesce(sum(invited),0),'attended',coalesce(sum(attended),0),'visit_details',coalesce(sum(visit_details),0),'registered',coalesce(sum(registered),0),'allotted',coalesce(sum(allotted),0),'amount',coalesce(sum(amount),0)::text) from branch_rows),
  'callers',coalesce((select jsonb_agg(to_jsonb(r) order by r.branch,r.name,r.id) from caller_rows r),'[]'),
  'phases',(select jsonb_agg((select count(*) from leads where allotted_phase=phase) order by phase) from generate_series(1,6) phase),
  'in_counselling',(select count(*) from leads where in_counselling and allotted_phase is null),

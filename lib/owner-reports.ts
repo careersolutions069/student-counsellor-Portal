@@ -22,6 +22,6 @@ export function formatINR(value:string) {
 }
 export function branchLabel(row:Pick<BranchReport,'name'|'branch_id'|'is_active'>) {return row.branch_id&&!row.is_active?`${row.name} (inactive)`:row.name;}
 export function branchReportCsv(rows:BranchReport[]) {
- const lines:unknown[][]=[['Branch','Code','Branch Status','Total Enquiries','F2F Invited','Visits Attended','Visit Details Completed','Visit Details Completed % of Enquiries','Registered IDs','Colleges Allotted','Counselling Amount Collected (INR)'],...rows.map(row=>[row.name,row.code,row.branch_id?(row.is_active?'Active':'Inactive'):'All branches',row.enquiries,row.invited,row.attended,row.visit_details,percent(row.visit_details,row.enquiries),row.registered,row.allotted,row.amount])];
+ const lines:unknown[][]=[['Branch','Code','Branch Status','Total Enquiries','F2F Invited','Visits Attended','Visit Details Completed','Visit Details Completed % of Enquiries','Registered IDs','Colleges Allotted','Counselling Amount Collected (INR)'],...rows.map(row=>[row.name,row.code,row.branch_id?(row.is_active?'Active':'Inactive'):'',row.enquiries,row.invited,row.attended,row.visit_details,percent(row.visit_details,row.enquiries),row.registered,row.allotted,row.amount])];
  return '\uFEFF'+lines.map(row=>row.map(cell=>{let text=String(cell);if(/^[\s]*[=+\-@\t\r]/.test(text))text=`'${text}`;return `"${text.replaceAll('"','""')}"`;}).join(',')).join('\r\n')+'\r\n';
 }
