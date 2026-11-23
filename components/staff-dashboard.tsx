@@ -137,6 +137,7 @@ export async function StaffDashboard({
   const kpis = kpiResult.data as {
     total_leads: number;
     f2f_attended: number;
+    visit_details_completed: number;
     profiles_completed: number;
     admissions_confirmed: number;
   };
@@ -278,9 +279,10 @@ export async function StaffDashboard({
           <Button type="submit">Apply branch filter</Button>
         </form>
       )}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <Stat label="Total Leads" value={kpis.total_leads} />
         <Stat label="F2F Attended" value={kpis.f2f_attended} />
+        <Stat label="Visit Details Completed" value={kpis.visit_details_completed} />
         <Stat label="Profiles Completed" value={kpis.profiles_completed} />
         <Stat label="Admissions Confirmed" value={kpis.admissions_confirmed} />
       </div>

@@ -13,6 +13,7 @@ import {
   verifyStudentSession,
 } from "@/lib/session";
 import { phoneSchema, registrationSchema } from "@/lib/validation";
+import { ADMISSION_STATUSES, ADMISSION_STATUS_ERROR } from "@/lib/admission-status";
 export type ActionState = { error?: string; success?: string };
 const uuid = z.uuid();
 const phone = phoneSchema;
@@ -417,7 +418,7 @@ export async function addStudentActivity(
           course_name: name,
           fees_estimate: z.string().max(150),
           document_status: z.string().max(2000),
-          admission_status: z.string().max(150),
+          admission_status: z.enum(ADMISSION_STATUSES, { error: ADMISSION_STATUS_ERROR }),
         })
         .parse(fields(form));
       const { error } = await client.from("shortlists_and_admissions").insert({
@@ -478,7 +479,7 @@ export async function updateActivity(
           course_name: name,
           fees_estimate: z.string().max(150),
           document_status: z.string().max(2000),
-          admission_status: z.string().max(150),
+          admission_status: z.enum(ADMISSION_STATUSES, { error: ADMISSION_STATUS_ERROR }),
         })
         .parse(fields(form));
       let query = client

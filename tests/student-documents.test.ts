@@ -18,13 +18,15 @@ test('login message contains the standard slip without disclosing DOB',()=>{
 });
 test('admission tracker uses public evidence and never verifies an empty checklist',()=>{
  assert.equal(admissionStep('Counselling',[],[]),0);
- assert.equal(admissionStep('Counselling',[{admission_status:'Shortlisted'}],[]),1);
+ assert.equal(admissionStep('Counselling',[{admission_status:'Pending'}],[]),1);
  assert.equal(admissionStep('Counselling',[],[{status:'Verified'}]),2);
  assert.equal(admissionStep('Counselling',[],[{status:'Verified'},{status:'Pending'}]),0);
  assert.equal(admissionStep('Applied',[],[]),3);
- assert.equal(admissionStep('Counselling',[{admission_status:'Application Submitted'}],[]),3);
+ assert.equal(admissionStep('Counselling',[{admission_status:'Applied'}],[]),3);
  assert.equal(admissionStep('Counselling',[{admission_status:'Admission Confirmed'}],[]),4);
  assert.equal(admissionStep('Admitted',[],[]),4);
+ for(const legacy of ['Confirmed','Admitted','admission confirmed','Application Submitted','Verbally confirmed',null]) assert.ok(admissionStep('Counselling',[{admission_status:legacy}],[])<=1,`${legacy} must not advance the tracker`);
+ assert.equal(admissionStep('Counselling',[{admission_status:'Not Admitted'},{admission_status:'Withdrawn'}],[]),1);
 });
 
 test('uncertain transport errors never authorize deleting a possibly committed upload',()=>{

@@ -1,4 +1,5 @@
 import { MAX_UPLOAD_SIZE, UPLOAD_SIZE_ERROR } from '@/lib/upload-limits';
+import type { AdmissionStatus } from '@/lib/admission-status';
 export const DOCUMENT_BUCKET = 'student-documents';
 export const MAX_DOCUMENT_SIZE = MAX_UPLOAD_SIZE;
 export const DOCUMENT_STATUSES = ['Pending','Uploaded','Verified','Re-upload Needed'] as const;
@@ -22,9 +23,10 @@ export function loginMessage(name:string,registration:string,origin:string) {
 }
 export const ADMISSION_STEPS=['Registered','Colleges Shortlisted','Documents Verified','Applied','Admission Confirmed'];
 export function admissionStep(stage:string,shortlists:{admission_status:string|null}[],documents:{status:string}[]) {
- const outcomes=shortlists.map(c=>(c.admission_status||'').trim().toLowerCase());
- if(stage==='Admitted'||outcomes.some(s=>['confirmed','admitted','admission confirmed'].includes(s))) return 4;
- if(stage==='Applied'||outcomes.some(s=>['applied','application submitted'].includes(s))) return 3;
+ // Only canonical statuses count. Legacy or unknown text never advances the tracker.
+ const has=(status:AdmissionStatus)=>shortlists.some(c=>c.admission_status===status);
+ if(stage==='Admitted'||has('Admission Confirmed')) return 4;
+ if(stage==='Applied'||has('Applied')) return 3;
  if(documents.length && documents.every(d=>d.status==='Verified')) return 2;
  return shortlists.length?1:0;
 }

@@ -31,6 +31,6 @@ insert into public.appointments(student_id,branch_id,scheduled_at,created_by) va
 insert into public.call_logs(student_id,branch_id,logged_by,outcome,remarks) values
  ('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000004','Connected','INTERNAL ONLY: Discuss preferences at the meeting.');
 insert into public.shortlists_and_admissions(student_id,branch_id,college_name,course_name,fees_estimate,document_status,admission_status,is_shared) values
- ('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','Sample College, Patna','B.Com','To be confirmed',E'Class 10 marksheet — received\nClass 12 marksheet — pending','Shortlisted',true),
- ('30000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000002','Sample College, Bangalore','B.Tech','To be confirmed','Class 12 marksheet — pending','Counselling scheduled',true),
- ('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','INTERNAL DRAFT COLLEGE','Draft course',null,null,'Under review',false);
+ ('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','Sample College, Patna','B.Com','To be confirmed',E'Class 10 marksheet — received\nClass 12 marksheet — pending','Pending',true),
+ ('30000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000002','Sample College, Bangalore','B.Tech','To be confirmed','Class 12 marksheet — pending','Pending',true),
+ ('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','INTERNAL DRAFT COLLEGE','Draft course',null,null,'Pending',false);

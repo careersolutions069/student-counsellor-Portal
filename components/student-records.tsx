@@ -16,6 +16,7 @@ import { ProfileCompletion } from "@/components/profile-completion";
 import type { Staff } from "@/lib/auth";
 import type { Branch } from "@/components/staff-management";
 import { dateTime } from "@/lib/utils";
+import { ADMISSION_STATUSES } from "@/lib/admission-status";
 export type Student = {
   id: string;
   branch_id: string;
@@ -57,7 +58,8 @@ export type Activity = {
   status?: string;
   college_name?: string;
   course_name?: string;
-  admission_status?: string;
+  admission_status?: string | null;
+  legacy_admission_status?: string | null;
   fees_estimate?: string;
   document_status?: string;
   is_shared?: boolean;
@@ -340,11 +342,16 @@ export function StudentRecords({
                       name="document_status"
                       placeholder="Class 12 marksheet pending"
                     />
-                    <Field
+                    <Select
                       label="Admission status"
                       name="admission_status"
-                      placeholder="Application pending"
-                    />
+                      defaultValue="Pending"
+                      required
+                    >
+                      {ADMISSION_STATUSES.map((status) => (
+                        <option key={status}>{status}</option>
+                      ))}
+                    </Select>
                     <label className="flex items-center gap-2 text-sm">
                       <input type="checkbox" name="is_shared" defaultChecked />
                       Share with student
@@ -433,7 +440,7 @@ export function StudentRecords({
                         className="mb-3 rounded-lg border border-slate-200 p-3"
                       >
                         <summary className="text-sm">
-                          {c.college_name} · {c.admission_status || "Pending"} ·{" "}
+                          {c.college_name} · {c.admission_status || "Needs review"} ·{" "}
                           {c.is_shared ? "Shared" : "Internal"}
                         </summary>
                         <ActionForm
@@ -466,11 +473,26 @@ export function StudentRecords({
                             name="document_status"
                             defaultValue={c.document_status || ""}
                           />
-                          <Field
+                          {!c.admission_status && (
+                            <p role="note" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+                              Needs review. Earlier status entered: “{c.legacy_admission_status}”. Choose a status to resolve.
+                            </p>
+                          )}
+                          <Select
                             label="Admission status"
                             name="admission_status"
                             defaultValue={c.admission_status || ""}
-                          />
+                            required
+                          >
+                            {!c.admission_status && (
+                              <option value="" disabled>
+                                Choose a status
+                              </option>
+                            )}
+                            {ADMISSION_STATUSES.map((status) => (
+                              <option key={status}>{status}</option>
+                            ))}
+                          </Select>
                           <label className="flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"

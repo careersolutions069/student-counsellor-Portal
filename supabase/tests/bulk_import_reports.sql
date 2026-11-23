@@ -49,7 +49,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
 do $$declare r jsonb;caller jsonb;begin
  r=public.owner_conversion_report(null,'2026-11-10T00:00Z','2026-11-11T00:00Z');
- perform pg_temp.check_ok((r->'total'->>'enquiries')::int=3 and (r->'total'->>'invited')::int=2 and (r->'total'->>'attended')::int=2,'Distinct cohort enquiry/invite/visit counts');
+ perform pg_temp.check_ok((r->'total'->>'enquiries')::int=3 and (r->'total'->>'invited')::int=2 and (r->'total'->>'attended')::int=1 and (r->'total'->>'visit_details')::int=2,'Distinct cohort enquiry/invite counts; attendance needs an attended appointment, visit details are separate');
  perform pg_temp.check_ok((r->'total'->>'amount')::numeric=3000.75 and (r->'total'->>'registered')::int=1 and (r->'total'->>'allotted')::int=1,'Revenue sum is exact and not multiplied by activity joins');
  perform pg_temp.check_ok(r->'phases'='[0,1,0,0,0,0]' and (r->>'in_counselling')::int=1,'Six phase and not-yet-allotted counts');
  perform pg_temp.check_ok((r->>'new_choices')::int=1 and (r->>'new_allotments')::int=1 and (r->>'upgrade_choices')::int=1 and (r->>'upgrade_allotments')::int=1,'Post-allotment badges');
