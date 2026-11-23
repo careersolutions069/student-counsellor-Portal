@@ -49,12 +49,12 @@ export function ParentPhoneField({
         }}
       />
       {pending && (
-        <p className="mt-2 text-sm text-slate-500" role="status">
+        <p className="mt-2 text-sm text-muted" role="status">
           Checking parent number…
         </p>
       )}
       {warning && (
-        <p className="mt-2 text-sm text-amber-800" role="status">
+        <p className="mt-2 text-sm text-marigold-text" role="status">
           {warning}
         </p>
       )}

@@ -9,7 +9,7 @@ export function TabsList({
 }: React.ComponentProps<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
-      className={cn("grid grid-cols-2 rounded-lg bg-slate-100 p-1", className)}
+      className={cn("grid grid-cols-2 gap-1 rounded-xl bg-sand p-1", className)}
       {...props}
     />
   );
@@ -21,7 +21,7 @@ export function TabsTrigger({
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "rounded-md px-3 py-2.5 text-sm font-semibold text-slate-600 outline-none focus-visible:ring-2 focus-visible:ring-teal-600 data-[state=active]:bg-white data-[state=active]:text-teal-900 data-[state=active]:shadow-sm",
+        "min-h-11 rounded-[9px] px-3 text-[15px] font-semibold text-[#4A5A64] transition-colors hover:text-navy data-[state=active]:bg-white data-[state=active]:font-bold data-[state=active]:text-navy data-[state=active]:shadow-[0_1px_2px_rgba(16,47,64,.12),0_0_0_1px_#D7CFBF]",
         className,
       )}
       {...props}
@@ -34,7 +34,7 @@ export function TabsContent({
 }: React.ComponentProps<typeof TabsPrimitive.Content>) {
   return (
     <TabsPrimitive.Content
-      className={cn("mt-7 outline-none", className)}
+      className={cn("mt-6", className)}
       {...props}
     />
   );

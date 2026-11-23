@@ -73,7 +73,7 @@ try {
 
   // Owner pages show the separate metrics and the inactive label.
   let html = await (await fetch(`${app}/owner?branch=${zzz}`, { headers: { cookie: owner.cookie() } })).text();
-  assert.ok(html.includes('Visit Details Completed') && html.includes('F2F Attended'));
+  assert.ok(html.includes('Visit Details Completed') && html.includes('Visits Attended'));
   html = await (await fetch(`${app}/owner?tab=reports&period=all`, { headers: { cookie: owner.cookie() } })).text();
   assert.ok(html.includes('QA Closed Branch (inactive)'));
 

@@ -1,12 +1,75 @@
 @import "tailwindcss";
+/* Career Solution design tokens (portal redesign handoff). */
 :root {
-  --background: #f5f7fa;
+  --background: #faf6ee;
   --foreground: #142d3b;
+  --card: #ffffff;
+  --border: #e4ddd0;
+  --input: #cfc6b6;
+  --primary: #0f766e;
+  --primary-hover: #115e59;
+  --primary-foreground: #ffffff;
+  --ring: #0f766e;
+  --muted-foreground: #56656f;
+  --cs-navy: #102f40;
+  --cs-navy-2: #1b3f52;
+  --cs-ivory: #faf6ee;
+  --cs-staff-bg: #f6f3ec;
+  --cs-sand: #efe9dd;
+  --cs-teal-50: #eaf5f2;
+  --cs-marigold: #e8a317;
+  --cs-marigold-soft: #f6d58a;
+  --cs-marigold-50: #fdf3dc;
+  --cs-marigold-text: #7a4f00;
+  --cs-warning: #9a3412;
+  --cs-warning-bg: #ffede0;
+  --destructive: #b42318;
+  --cs-error-text: #8f1d14;
+  --cs-error-bg: #fdedeb;
+  --cs-success: #166534;
+  --cs-success-bg: #e7f4ea;
+  --cs-info: #1d46b8;
+  --cs-info-bg: #eaf0ff;
+  --cs-neutral: #3f4c55;
+  --cs-neutral-bg: #eef0f1;
+  --radius: 0.75rem;
+}
+@theme inline {
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, monospace;
+  --color-navy: var(--cs-navy);
+  --color-navy-2: var(--cs-navy-2);
+  --color-ink: var(--foreground);
+  --color-ivory: var(--cs-ivory);
+  --color-staff: var(--cs-staff-bg);
+  --color-sand: var(--cs-sand);
+  --color-line: var(--border);
+  --color-input-line: var(--input);
+  --color-muted: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-teal-soft: var(--cs-teal-50);
+  --color-marigold: var(--cs-marigold);
+  --color-marigold-soft: var(--cs-marigold-soft);
+  --color-marigold-50: var(--cs-marigold-50);
+  --color-marigold-text: var(--cs-marigold-text);
+  --color-warning: var(--cs-warning);
+  --color-warning-bg: var(--cs-warning-bg);
+  --color-danger: var(--destructive);
+  --color-danger-text: var(--cs-error-text);
+  --color-danger-bg: var(--cs-error-bg);
+  --color-success: var(--cs-success);
+  --color-success-bg: var(--cs-success-bg);
+  --color-info: var(--cs-info);
+  --color-info-bg: var(--cs-info-bg);
+  --color-neutral: var(--cs-neutral);
+  --color-neutral-bg: var(--cs-neutral-bg);
 }
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  line-height: 1.5;
 }
 button,
 summary,
@@ -14,19 +77,30 @@ select {
   cursor: pointer;
 }
 ::selection {
-  background: #bce6dc;
+  background: #bfe3dc;
+}
+:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+.on-navy :focus-visible,
+.on-navy:focus-visible {
+  outline-color: var(--cs-marigold-soft);
+}
+.num {
+  font-variant-numeric: tabular-nums;
 }
 .panel {
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  background: white;
-  padding: 24px;
-  box-shadow: 0 2px 3px #102c3b03;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  padding: 20px;
 }
 .section-title {
   font-size: 1.125rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
+  color: var(--cs-navy);
 }
 .table-scroll {
   overflow-x: auto;
@@ -37,14 +111,23 @@ table {
   text-align: left;
 }
 th {
-  color: #64748b;
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--muted-foreground);
+  background: #fbf9f4;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
 }
 td {
-  padding: 16px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--cs-sand);
   font-size: 0.875rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

@@ -1,112 +1,242 @@
-import {
-  GraduationCap,
-  LayoutDashboard,
-  MapPin,
-  ShieldCheck,
-  LogOut,
-} from "lucide-react";
 import { logout } from "@/app/actions";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/brand";
+import { MobileNav, NavList, type NavItem } from "@/components/staff-nav";
+import { cn } from "@/lib/utils";
+export type { NavItem };
+function SignOut({ className = "" }: { className?: string }) {
+  return (
+    <form action={logout}>
+      <button
+        type="submit"
+        className={cn(
+          "min-h-11 font-semibold text-marigold-soft underline-offset-4 hover:underline",
+          className,
+        )}
+      >
+        Sign out
+      </button>
+    </form>
+  );
+}
+/** Staff workspace: 248 px navy sidebar on desktop, menu button + sheet below 1024 px. */
 export function Shell({
   children,
   name,
   role,
   branch,
-  navigation,
+  nav = [],
 }: {
   children: React.ReactNode;
   name: string;
   role: string;
   branch?: string;
-  navigation?: React.ReactNode;
+  nav?: NavItem[];
 }) {
+  const roleLabel = branch ? `${role} · your branch` : role;
+  const account = (
+    <div className="rounded-xl bg-navy-2 p-3 text-[13px] text-[#DCE9EC]">
+      Signed in as
+      <strong className="block text-sm text-white">{name}</strong>
+      <SignOut />
+    </div>
+  );
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
-      <aside className="flex flex-col bg-[#102f40] text-white lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
-        <div className="flex items-center gap-3 p-6">
-          <div className="rounded-xl bg-teal-400/15 p-2.5">
-            <GraduationCap className="text-teal-300" size={26} />
-          </div>
-          <div>
-            <p className="font-bold tracking-tight">Career Solution</p>
-            <p className="mt-0.5 text-xs text-slate-300">
-              Counselling & admissions
-            </p>
+    <div className="min-h-screen bg-staff text-[15px] lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
+      <aside className="on-navy hidden flex-col gap-4 bg-navy px-3.5 py-5 text-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto">
+        <div className="flex items-center gap-2.5 px-2">
+          <BrandMark size={30} />
+          <div className="leading-tight">
+            <span className="block text-base font-bold">Career Solution</span>
+            {!branch && (
+              <span className="text-xs text-[#B9D4D9]">{role} · All India</span>
+            )}
           </div>
         </div>
-        <nav aria-label="Main navigation" className="px-4 pb-4 lg:mt-5">
-          <span
-            aria-current={navigation ? undefined : "page"}
-            className="flex items-center gap-3 rounded-lg bg-white/10 px-4 py-3 text-sm font-medium"
-          >
-            <LayoutDashboard size={18} />
-            Dashboard
-          </span>
-          {navigation}
-        </nav>
-        <div className="mt-auto hidden p-6 lg:block">
-          <ShieldCheck size={22} className="mb-3 text-teal-300" />
-          <p className="text-sm font-medium">{role}</p>
-          <p className="mt-1 text-sm text-slate-300">
-            {branch || "Career Solution portal"}
-          </p>
-        </div>
+        {branch && (
+          <div className="rounded-xl bg-navy-2 px-3 py-2.5">
+            <span className="block text-xs text-[#B9D4D9]">{roleLabel}</span>
+            <strong>{branch}</strong>
+          </div>
+        )}
+        {nav.length > 0 && (
+          <nav aria-label="Main navigation">
+            <NavList items={nav} />
+          </nav>
+        )}
+        <div className="mt-auto">{account}</div>
       </aside>
       <div className="min-w-0">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-4 md:px-9">
-          <span className="flex items-center gap-2 text-sm text-slate-500">
-            <MapPin size={16} />
-            {branch || "All India"}
-          </span>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-semibold">{name}</p>
-              <p className="text-xs text-slate-500">{role}</p>
-            </div>
-            <form action={logout}>
-              <Button variant="ghost" size="sm">
-                <LogOut size={16} />
-                <span className="sr-only sm:not-sr-only">Sign out</span>
-              </Button>
-            </form>
+        <header className="on-navy flex items-center gap-2.5 bg-navy px-4 py-2 text-white lg:hidden">
+          <MobileNav
+            items={nav}
+            scope={branch}
+            roleLabel={roleLabel}
+            footer={account}
+          />
+          <BrandMark size={28} />
+          <div className="min-w-0 flex-1 leading-tight">
+            <strong className="block">Career Solution</strong>
+            <span className="block truncate text-xs text-[#B9D4D9]">
+              {name} · {branch || "All India"}
+            </span>
           </div>
         </header>
-        <main className="mx-auto max-w-[1500px] space-y-7 p-5 md:p-9">
+        <main className="mx-auto max-w-[1500px] space-y-6 px-4 py-6 md:px-8 md:pb-10">
           {children}
         </main>
       </div>
     </div>
   );
 }
-export function PageTitle({ title, text }: { title: string; text: string }) {
+/** Student portal: one page, navy header with Sign out, no sidebar. */
+export function StudentShell({
+  children,
+  name,
+}: {
+  children: React.ReactNode;
+  name: string;
+}) {
   return (
-    <div>
-      <p className="mb-2 text-sm font-semibold text-teal-700">
-        Career Solution portal
-      </p>
-      <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
-      <p className="mt-2 text-slate-500">{text}</p>
+    <div className="min-h-screen bg-ivory text-[15px]">
+      <header className="on-navy bg-navy text-white">
+        <div className="mx-auto flex max-w-[1200px] items-center gap-3 px-4 py-2.5 sm:px-8 sm:py-3.5">
+          <BrandMark size={32} />
+          <span className="text-[17px] font-bold tracking-[-0.01em] sm:text-lg">
+            Career Solution
+          </span>
+          <span className="hidden border-l border-[#2B4D5E] pl-3 text-sm text-[#B9D4D9] sm:inline">
+            Student portal
+          </span>
+          <span className="ml-auto hidden text-sm text-[#DCE9EC] md:inline">
+            {name}
+          </span>
+          <form action={logout} className="ml-auto md:ml-0">
+            <Button variant="navyOutline" size="sm" type="submit">
+              Sign out
+            </Button>
+          </form>
+        </div>
+      </header>
+      <main className="mx-auto flex max-w-[1200px] flex-col gap-5 px-4 py-5 sm:gap-7 sm:px-8 sm:py-8">
+        {children}
+      </main>
+      <footer className="mx-auto max-w-[1200px] px-4 pb-10 pt-2 text-[13px] text-muted sm:px-8">
+        Career Solution · Only you and your branch can see this page.
+      </footer>
+    </div>
+  );
+}
+export function PageTitle({
+  title,
+  text,
+  eyebrow,
+  actions,
+}: {
+  title: string;
+  text?: string;
+  eyebrow?: string;
+  actions?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        {eyebrow && (
+          <p className="text-[13px] font-semibold text-primary">{eyebrow}</p>
+        )}
+        <h1 className="text-[28px] font-bold leading-tight tracking-[-0.03em] text-navy md:text-[32px]">
+          {title}
+        </h1>
+        {text && <p className="mt-1 text-muted">{text}</p>}
+      </div>
+      {actions}
     </div>
   );
 }
 export function Stat({
   label,
   value,
+  hint,
+  tone,
 }: {
   label: string;
   value: string | number;
+  hint?: string;
+  tone?: "teal" | "navy";
 }) {
   return (
-    <div className="panel">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className="mt-3 text-3xl font-bold tracking-tight">{value}</p>
+    <div
+      className={cn(
+        "rounded-xl border border-line bg-white p-3.5",
+        tone === "teal" && "shadow-[inset_0_3px_0_#0F766E]",
+        tone === "navy" && "shadow-[inset_0_3px_0_#102F40]",
+      )}
+    >
+      <p className="text-[13px] text-muted">{label}</p>
+      <p
+        className={cn(
+          "num mt-0.5 text-[28px] font-bold",
+          tone === "teal" ? "text-primary" : "text-navy",
+        )}
+      >
+        {typeof value === "number"
+          ? new Intl.NumberFormat("en-IN").format(value)
+          : value}
+      </p>
+      {hint && <p className="text-xs text-muted">{hint}</p>}
     </div>
   );
 }
 export function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-block rounded-md bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-800">
+    <span className="inline-block rounded-full bg-teal-soft px-2.5 py-0.5 text-xs font-semibold text-[#0B5650]">
       {children}
+    </span>
+  );
+}
+const tones = {
+  neutral: "bg-neutral-bg text-neutral",
+  info: "bg-info-bg text-info",
+  success: "bg-success-bg text-success",
+  warning: "bg-warning-bg text-warning",
+  marigold: "bg-marigold-50 text-marigold-text",
+} as const;
+const statusStyles: Record<string, { tone: keyof typeof tones; glyph?: string }> = {
+  Pending: { tone: "neutral", glyph: "○" },
+  Uploaded: { tone: "info", glyph: "↑" },
+  Verified: { tone: "success", glyph: "✓" },
+  "Re-upload Needed": { tone: "warning", glyph: "!" },
+  Scheduled: { tone: "info" },
+  scheduled: { tone: "info" },
+  Attended: { tone: "success", glyph: "✓" },
+  attended: { tone: "success", glyph: "✓" },
+  completed: { tone: "success", glyph: "✓" },
+  Missed: { tone: "warning", glyph: "!" },
+  missed: { tone: "warning", glyph: "!" },
+  Applied: { tone: "info", glyph: "↑" },
+  "Admission Confirmed": { tone: "success", glyph: "✓" },
+  "Not Admitted": { tone: "neutral" },
+  Withdrawn: { tone: "neutral" },
+  Active: { tone: "success" },
+};
+/** Status always carries text and a glyph; colour is the third cue. */
+export function StatusBadge({
+  status,
+  label,
+}: {
+  status: string;
+  label?: string;
+}) {
+  const style = statusStyles[status] || { tone: "neutral" as const };
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[13px] font-semibold",
+        tones[style.tone],
+      )}
+    >
+      {style.glyph && <span aria-hidden="true">{style.glyph}</span>}
+      {label || status}
     </span>
   );
 }

@@ -192,15 +192,15 @@ export function StudentRecords({
         <h2 className="section-title">
           {caller ? "Assigned students" : "Student records"}
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted">
           {caller
             ? "Your enquiries and counselling activity."
             : "Manage enquiries, complete profiles and follow admission progress."}
         </p>
       </div>
       {!caller && (
-        <details className="rounded-lg border border-slate-200 p-4">
-          <summary className="text-sm font-semibold text-teal-800">
+        <details className="rounded-lg border border-line p-4">
+          <summary className="text-sm font-semibold text-primary">
             Add student enquiry
           </summary>
           <ActionForm
@@ -234,14 +234,14 @@ export function StudentRecords({
               staff={role === "owner" ? [] : staff}
               caller={false}
             />
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted">
               Assign a counsellor from the student’s record after saving.
             </p>
           </ActionForm>
         </details>
       )}
       {students.length === 0 && (
-        <p className="py-8 text-center text-slate-500">
+        <p className="py-8 text-center text-muted">
           No students to show yet.
         </p>
       )}
@@ -249,12 +249,12 @@ export function StudentRecords({
         {students.map((s) => (
           <details
             key={s.id}
-            className="group rounded-xl border border-slate-200"
+            className="group rounded-xl border border-line"
           >
             <summary className="flex flex-wrap items-center justify-between gap-4 p-5">
               <div>
                 <p className="font-semibold">{s.full_name}</p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-muted">
                   {s.registration_number || "Profile incomplete"} ·{" "}
                   {s.student_phone} ·{" "}
                   {branches.find((b) => b.id === s.branch_id)?.name}
@@ -262,7 +262,7 @@ export function StudentRecords({
               </div>
               <Badge>{s.pipeline_stage}</Badge>
             </summary>
-            <div className="space-y-6 border-t border-slate-100 p-5">
+            <div className="space-y-6 border-t border-sand p-5">
               <ActionForm
                 action={saveStudent}
                 submit="Save student"
@@ -279,7 +279,7 @@ export function StudentRecords({
               {!caller && <CounsellingStage studentId={s.id} />}
               {!caller && <StudentDocuments documents={documents.filter(d=>d.student_id===s.id)} allowUpload={Boolean(s.allow_student_upload)} studentId={s.id}/>}
               <div className="grid gap-5 xl:grid-cols-3">
-                <details className="rounded-lg border border-slate-200 p-4">
+                <details className="rounded-lg border border-line p-4">
                   <summary className="text-sm font-semibold">
                     Log a call
                   </summary>
@@ -304,7 +304,7 @@ export function StudentRecords({
                     />
                   </ActionForm>
                 </details>
-                <details className="rounded-lg border border-slate-200 p-4">
+                <details className="rounded-lg border border-line p-4">
                   <summary className="text-sm font-semibold">
                     Schedule meeting
                   </summary>
@@ -323,7 +323,7 @@ export function StudentRecords({
                     />
                   </ActionForm>
                 </details>
-                <details className="rounded-lg border border-slate-200 p-4">
+                <details className="rounded-lg border border-line p-4">
                   <summary className="text-sm font-semibold">
                     Add college shortlist
                   </summary>
@@ -367,7 +367,7 @@ export function StudentRecords({
                   {calls
                     .filter((c) => c.student_id === s.id)
                     .map((c) => (
-                      <p key={c.id} className="mb-2 text-sm text-slate-600">
+                      <p key={c.id} className="mb-2 text-sm text-[#3E4F59]">
                         {c.outcome} · {c.remarks || "No remarks"}
                         {c.next_callback_at &&
                           ` · Callback ${dateTime(c.next_callback_at)}`}
@@ -381,7 +381,7 @@ export function StudentRecords({
                     .map((a) => (
                       <details
                         key={a.id}
-                        className="mb-3 rounded-lg border border-slate-200 p-3"
+                        className="mb-3 rounded-lg border border-line p-3"
                       >
                         <summary className="text-sm">
                           {dateTime(a.scheduled_at!)} · {a.status}
@@ -437,7 +437,7 @@ export function StudentRecords({
                     .map((c) => (
                       <details
                         key={c.id}
-                        className="mb-3 rounded-lg border border-slate-200 p-3"
+                        className="mb-3 rounded-lg border border-line p-3"
                       >
                         <summary className="text-sm">
                           {c.college_name} · {c.admission_status || "Needs review"} ·{" "}
@@ -474,7 +474,7 @@ export function StudentRecords({
                             defaultValue={c.document_status || ""}
                           />
                           {!c.admission_status && (
-                            <p role="note" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+                            <p role="note" className="rounded-lg bg-marigold-50 p-3 text-sm text-marigold-text">
                               Needs review. Earlier status entered: “{c.legacy_admission_status}”. Choose a status to resolve.
                             </p>
                           )}
@@ -504,7 +504,7 @@ export function StudentRecords({
                         </ActionForm>
                         {!caller && (
                           <details className="mt-4">
-                            <summary className="text-sm font-semibold text-red-700">
+                            <summary className="text-sm font-semibold text-danger">
                               Delete shortlist entry
                             </summary>
                             <ActionForm
@@ -514,7 +514,7 @@ export function StudentRecords({
                               className="mt-3"
                             >
                               <input type="hidden" name="id" value={c.id} />
-                              <p className="text-sm text-slate-500">
+                              <p className="text-sm text-muted">
                                 This removes the college entry from the
                                 student’s shortlist.
                               </p>
@@ -526,11 +526,11 @@ export function StudentRecords({
                 </div>
               </div>
               {role === "owner" && (
-                <details className="rounded-lg border border-slate-200 p-4">
+                <details className="rounded-lg border border-line p-4">
                   <summary className="text-sm font-semibold">
                     Transfer student to another branch
                   </summary>
-                  <p className="my-3 text-sm text-slate-500">
+                  <p className="my-3 text-sm text-muted">
                     Moves the student and related records. Clears the counsellor
                     assignment and ends student sessions. The registration ID is
                     retained.

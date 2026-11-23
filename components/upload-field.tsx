@@ -12,6 +12,6 @@ export function UploadField({onChange, ...props}: ComponentProps<typeof Field>) 
       setError(message);
       onChange?.(event);
     }}/>
-    {error && <p id={errorId} role="alert" className="mt-2 text-sm text-red-800">{error}</p>}
+    {error && <p id={errorId} role="alert" className="mt-2 text-sm text-danger-text">{error}</p>}
   </div>;
 }

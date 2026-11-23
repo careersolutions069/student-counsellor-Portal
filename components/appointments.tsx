@@ -16,30 +16,30 @@ export function Appointments({ meetings }: { meetings: Meeting[] }) {
     <section className="panel space-y-5">
       <div>
         <h2 className="section-title">F2F appointments</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted">
           Pending, today and upcoming visits. Times are shown in India Standard Time.
         </p>
       </div>
       {meetings.length === 0 && (
-        <p className="text-slate-500">
+        <p className="text-muted">
           No pending, today or upcoming appointments.
         </p>
       )}
       {meetings.map((m) => (
-        <article key={m.id} className="rounded-xl border border-slate-200 p-5">
+        <article key={m.id} className="rounded-xl border border-line p-5">
           <div className="flex flex-wrap justify-between gap-3">
             <div>
               <h3 className="font-semibold">
                 {m.students?.full_name || "Student unavailable"}
               </h3>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-muted">
                 {dateTime(m.scheduled_at)} · {m.students?.student_phone}
               </p>
             </div>
             <Badge>{m.status === "completed" ? "attended" : m.status}</Badge>
           </div>
           {m.students && (
-            <dl className="mt-4 grid gap-3 rounded-lg bg-slate-50 p-4 text-sm sm:grid-cols-2">
+            <dl className="mt-4 grid gap-3 rounded-lg bg-[#FBF9F4] p-4 text-sm sm:grid-cols-2">
               {[
                 ["Parent phone", m.students.parent_phone],
                 ["Target course", m.students.target_course],
@@ -49,7 +49,7 @@ export function Appointments({ meetings }: { meetings: Meeting[] }) {
                 ["Budget range", m.students.budget_range],
               ].map(([label, value]) => (
                 <div key={label}>
-                  <dt className="text-slate-500">{label}</dt>
+                  <dt className="text-muted">{label}</dt>
                   <dd className="mt-1 font-medium">
                     {value || "To be discussed"}
                   </dd>
@@ -75,7 +75,7 @@ export function Appointments({ meetings }: { meetings: Meeting[] }) {
           )}
           {["attended", "completed"].includes(m.status) && m.students && (
             <details className="mt-5">
-              <summary className="font-semibold text-teal-800">
+              <summary className="font-semibold text-primary">
                 {m.students.is_profile_complete
                   ? "Visit details & student login"
                   : "Complete visit details & generate registration ID"}

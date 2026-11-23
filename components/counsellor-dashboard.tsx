@@ -43,27 +43,25 @@ export async function CounsellorDashboard({
       branch={branch.data.name}
     >
       <PageTitle
+        eyebrow={branch.data.name}
         title="Your calling desk"
         text="Call your assigned students, arrange visits and keep every next step clear."
       />
-      <nav aria-label="Calling queues" className="grid gap-2 sm:grid-cols-3">
+      <nav aria-label="Calling queues" className="grid grid-cols-3 gap-1 rounded-xl bg-sand p-1 sm:max-w-xl">
         {tabs.map(([key, label]) => (
           <Link
             key={key}
             href={`?tab=${key}`}
             aria-current={queue === key ? "page" : undefined}
-            className={`flex items-center justify-between gap-3 rounded-xl border p-4 text-sm font-semibold ${queue === key ? "border-teal-800 bg-teal-800 text-white" : "border-slate-200 bg-white text-slate-700"}`}
+            className={`flex min-h-[52px] flex-col items-center justify-center rounded-[9px] px-1 py-1.5 text-center transition-colors ${queue === key ? "bg-white font-bold text-navy shadow-[0_0_0_1px_#D7CFBF]" : "font-semibold text-[#4A5A64] hover:text-navy"}`}
           >
-            <span>{label}</span>
-            <NavigationPending />
-            <span className="rounded-md bg-slate-100/20 px-2 py-1">
-              {data.counts[key] || 0}
-            </span>
+            <span className="num text-lg font-bold">{data.counts[key] || 0}</span>
+            <span className="flex items-center gap-1 text-xs leading-tight">{label}<NavigationPending /></span>
           </Link>
         ))}
       </nav>
       {queue === "to_call" && (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted">
           New enquiries and callbacks due today or overdue. Future callbacks
           appear on their scheduled day.
         </p>
@@ -78,7 +76,7 @@ export async function CounsellorDashboard({
         ))}
       </div>
       {data.students.length === 0 && (
-        <div className="panel py-12 text-center text-slate-500">
+        <div className="panel py-12 text-center text-muted">
           {queue === "to_call"
             ? "No calls due right now."
             : queue === "invited"
@@ -100,7 +98,7 @@ export async function CounsellorDashboard({
             <Link href={`?tab=${queue}&page=${page + 1}`}>Next page</Link>
           </Button>
         )}
-        <span className="text-sm text-slate-500">
+        <span className="text-sm text-muted">
           Page {page} · {data.total} students
         </span>
       </nav>

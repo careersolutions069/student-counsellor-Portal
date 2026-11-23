@@ -103,14 +103,14 @@ export function StaffManagement({
         <h2 className="section-title">
           {owner ? "Staff management" : "Branch Tele-counsellors"}
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted">
           {owner
             ? "Manage Centre Heads and Tele-counsellors across India."
             : "Manage Tele-counsellors for your branch."}
         </p>
       </div>
-      <details className="rounded-lg border border-slate-200 p-4">
-        <summary className="font-semibold text-teal-800">
+      <details className="rounded-lg border border-line p-4">
+        <summary className="font-semibold text-primary">
           Create staff account
         </summary>
         <ActionForm
@@ -125,12 +125,12 @@ export function StaffManagement({
         {visible.map((member) => (
           <details
             key={member.id}
-            className="rounded-xl border border-slate-200 p-5"
+            className="rounded-xl border border-line p-5"
           >
             <summary className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="font-semibold">{member.full_name}</p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-muted">
                   {member.email} · {member.role.replaceAll("_", " ")} ·{" "}
                   {branches.find((b) => b.id === member.branch_id)?.name ||
                     "All India"}
@@ -154,7 +154,7 @@ export function StaffManagement({
                     owner={owner}
                   />
                   {owner && (
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-muted">
                       Changing a caller’s branch or role clears their student
                       assignments.
                     </p>
@@ -178,7 +178,7 @@ export function StaffManagement({
         ))}
       </div>
       {visible.length === 0 && (
-        <p className="text-sm text-slate-500">No staff accounts yet.</p>
+        <p className="text-sm text-muted">No staff accounts yet.</p>
       )}
     </section>
   );

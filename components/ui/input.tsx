@@ -4,7 +4,7 @@ export function Input({ className, ...props }: React.ComponentProps<"input">) {
   return (
     <input
       className={cn(
-        "flex h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base shadow-xs outline-none focus-visible:border-teal-700 focus-visible:ring-2 focus-visible:ring-teal-700/20 disabled:opacity-50",
+        "flex h-11 w-full rounded-[10px] border-[1.5px] border-input-line bg-white px-3.5 text-base text-ink outline-none placeholder:text-muted/80 focus-visible:border-primary focus-visible:shadow-[0_0_0_3px_#BFE3DC] focus-visible:outline-none disabled:opacity-60 aria-invalid:border-danger",
         className,
       )}
       {...props}

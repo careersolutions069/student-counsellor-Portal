@@ -17,7 +17,6 @@ import { History, type Transfer, type HistoryStudent } from "@/components/histor
 import { Field, Select } from "@/components/fields";
 import { Button } from "@/components/ui/button";
 import { StudentTransfer } from "@/components/student-transfer";
-import { NavigationPending } from "@/components/navigation-pending";
 import { indiaDayBounds } from "@/lib/validation";
 export type DashboardFilters = {
   branch?: string;
@@ -223,30 +222,17 @@ export async function StaffDashboard({
     <Shell
       name={staff.full_name}
       role={owner ? "Owner" : caller ? "Tele-counsellor" : "Centre Head"}
-      branch={branches.find((b) => b.id === staff.branch_id)?.name}
-      navigation={!caller && (
-        <div className="mt-3 space-y-1 border-t border-white/10 pt-3">
-          {tabs.map(([key, label]) => (
-            <Link
-              key={key}
-              href={href(key)}
-              aria-current={tab === key ? "page" : undefined}
-              className={`flex min-h-11 items-center rounded-lg px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300 ${tab === key ? "bg-teal-700 text-white" : "text-slate-200 hover:bg-white/10 hover:text-white"}`}
-            >
-              {label}
-              <NavigationPending />
-            </Link>
-          ))}
-        </div>
-      )}
+      branch={owner ? undefined : branches.find((b) => b.id === staff.branch_id)?.name}
+      nav={caller ? [] : tabs.map(([key, label]) => ({ href: href(key), label, current: tab === key }))}
     >
       <PageTitle
+        eyebrow={owner ? "Owner" : branches[0]?.name || "Your branch"}
         title={
           owner
             ? "All-India overview"
             : caller
               ? "Your student enquiries"
-              : `${branches[0]?.name || "Branch"} overview`
+              : `${tabs.find(([key]) => key === tab)?.[1] || "Branch overview"}`
         }
         text={
           owner
@@ -257,17 +243,17 @@ export async function StaffDashboard({
         }
       />
       {owner && (
-        <form method="get" className="panel flex flex-wrap items-end gap-4">
+        <form method="get" aria-label="Global branch filter" className="flex flex-wrap items-end gap-3 rounded-[14px] border-[1.5px] border-navy bg-white p-3.5">
           <input type="hidden" name="tab" value={tab} />
           {tab === "history" && <input type="hidden" name="q" value={queryText} />}
           {["period", "from", "to"].map(key => <input key={key} type="hidden" name={key} value={filters[key as keyof DashboardFilters] || ""} />)}
-          <div className="min-w-56 flex-1">
+          <div className="min-w-56 flex-1 [&_select]:bg-teal-soft [&_select]:font-bold [&_select]:text-navy">
             <Select
-              label="Global branch filter"
+              label="Showing"
               name="branch"
               defaultValue={selectedBranch || ""}
             >
-              <option value="">All Branches</option>
+              <option value="">All Branches ({branches.filter((b) => b.is_active).length} active{branches.some((b) => !b.is_active) ? `, ${branches.filter((b) => !b.is_active).length} inactive` : ""})</option>
               {branches.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
@@ -279,13 +265,13 @@ export async function StaffDashboard({
           <Button type="submit">Apply branch filter</Button>
         </form>
       )}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <section aria-label="Key numbers" className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
         <Stat label="Total Leads" value={kpis.total_leads} />
-        <Stat label="F2F Attended" value={kpis.f2f_attended} />
-        <Stat label="Visit Details Completed" value={kpis.visit_details_completed} />
+        <Stat label="Visits Attended" value={kpis.f2f_attended} hint="Student came to the branch" tone="teal" />
+        <Stat label="Visit Details Completed" value={kpis.visit_details_completed} hint="Visit form saved by branch" tone="navy" />
         <Stat label="Profiles Completed" value={kpis.profiles_completed} />
         <Stat label="Admissions Confirmed" value={kpis.admissions_confirmed} />
-      </div>
+      </section>
       {tab === "students" && (
         <>
           <form
@@ -333,11 +319,11 @@ export async function StaffDashboard({
       {tab === "appointments" && <Appointments meetings={meetings} />}
       {tab === "history" && (
         <>
-          {owner ? <section className="panel space-y-5"><h2 className="section-title">Transfer student</h2><p className="text-sm text-slate-500">Find the student, choose an active destination branch, and enter a reason.</p>
+          {owner ? <section className="panel space-y-5"><h2 className="section-title">Transfer student</h2><p className="text-sm text-muted">Find the student, choose an active destination branch, and enter a reason.</p>
             <form method="get" className="flex flex-wrap items-end gap-3"><input type="hidden" name="tab" value="history"/><input type="hidden" name="branch" value={selectedBranch || ""}/><div className="min-w-0 flex-1"><Field label="Find student" name="q" defaultValue={queryText} placeholder="Name, phone or registration number" maxLength={100}/></div><Button type="submit" variant="outline">Find students</Button></form>
-            <p className="text-sm text-slate-500">{studentCount} matching students.{studentCount > 25 ? " Showing the first 25. Refine your search to find another student." : ""}</p>
+            <p className="text-sm text-muted">{studentCount} matching students.{studentCount > 25 ? " Showing the first 25. Refine your search to find another student." : ""}</p>
             <StudentTransfer students={students.map(s=>({id:s.id,branch_id:s.branch_id,full_name:s.full_name,student_phone:s.student_phone,registration_number:s.registration_number}))} branches={branches}/>
-          </section> : <section className="panel space-y-3"><h2 className="section-title">Student transfers</h2><p className="text-sm text-slate-600">Only the Owner can transfer students between branches. Contact the Owner to arrange a transfer. Transfers involving your branch appear below.</p></section>}
+          </section> : <section className="panel space-y-3"><h2 className="section-title">Student transfers</h2><p className="text-sm text-[#3E4F59]">Only the Owner can transfer students between branches. Contact the Owner to arrange a transfer. Transfers involving your branch appear below.</p></section>}
           <History transfers={transfers} branches={branches} staff={members} students={historyStudents}/>
         </>
       )}
@@ -353,7 +339,7 @@ export async function StaffDashboard({
               <Link href={href(tab, page + 1)}>Next page</Link>
             </Button>
           )}
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-muted">
             Page {page} · {recordCount} records
           </span>
         </nav>

@@ -152,7 +152,7 @@ function CallDrawer({
               Save education details
             </Button>
           </section>
-          <section className="space-y-4 border-t border-slate-200 pt-5">
+          <section className="space-y-4 border-t border-line pt-5">
             <h3 className="font-semibold">Call outcome & next step</h3>
             <Select
               label="Call outcome"
@@ -194,14 +194,14 @@ function CallDrawer({
               />
             )}
             <label className="block space-y-1.5">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-ink">
                 Internal call remarks
               </span>
               <textarea
                 name="remarks"
                 rows={3}
                 maxLength={3000}
-                className="w-full rounded-lg border border-slate-300 p-3 text-base focus-visible:outline-teal-700"
+                className="w-full rounded-lg border border-input-line p-3 text-base focus-visible:outline-primary"
               />
             </label>
             <Button
@@ -217,7 +217,7 @@ function CallDrawer({
         {state.error && (
           <p
             role="alert"
-            className="rounded-lg bg-red-50 p-3 text-sm text-red-800"
+            className="rounded-lg bg-danger-bg p-3 text-sm text-danger-text"
           >
             {state.error}
           </p>
@@ -225,20 +225,20 @@ function CallDrawer({
         {state.success && (
           <p
             role="status"
-            className="rounded-lg bg-teal-50 p-3 text-sm text-teal-900"
+            className="rounded-lg bg-teal-soft p-3 text-sm text-navy"
           >
             {state.success}
           </p>
         )}
         {state.parent_phone_shared && (
-          <p role="status" className="text-sm text-amber-800">
+          <p role="status" className="text-sm text-marigold-text">
             This parent number is already used in this branch. The student was
             saved successfully.
           </p>
         )}
       </form>
       {appointment?.status === "scheduled" && (
-        <div className="mt-5 rounded-xl border border-teal-200 bg-teal-50 p-4">
+        <div className="mt-5 rounded-xl border border-[#9CC9C1] bg-teal-soft p-4">
           <p className="mb-3 text-sm font-semibold">
             Visit · {dateTime(appointment.scheduled_at)}
           </p>
@@ -258,41 +258,41 @@ function CallDrawer({
           </Button>
         </div>
       )}
-      <section className="mt-7 space-y-3 border-t border-slate-200 pt-5">
+      <section className="mt-7 space-y-3 border-t border-line pt-5">
         <h3 className="font-semibold">Internal call history</h3>
         {visibleHistory.map((call) => (
           <article
             key={call.id}
-            className="rounded-lg border border-slate-200 p-4"
+            className="rounded-lg border border-line p-4"
           >
             <p className="text-sm font-semibold">{call.outcome}</p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-muted">
               {dateTime(call.created_at)}
             </p>
             {call.remarks && (
-              <p className="mt-2 whitespace-pre-line text-sm text-slate-600">
+              <p className="mt-2 whitespace-pre-line text-sm text-[#3E4F59]">
                 {call.remarks}
               </p>
             )}
             {call.next_callback_at && (
-              <p className="mt-2 text-sm text-teal-800">
+              <p className="mt-2 text-sm text-primary">
                 Callback · {dateTime(call.next_callback_at)}
               </p>
             )}
           </article>
         ))}
         {loading && (
-          <p role="status" className="text-sm text-slate-500">
+          <p role="status" className="text-sm text-muted">
             Loading call history…
           </p>
         )}
         {historyError && (
-          <p role="alert" className="text-sm text-red-800">
+          <p role="alert" className="text-sm text-danger-text">
             {historyError}
           </p>
         )}
         {!loading && !visibleHistory.length && !historyError && (
-          <p className="text-sm text-slate-500">No calls logged yet.</p>
+          <p className="text-sm text-muted">No calls logged yet.</p>
         )}
         {hasMore && (
           <Button variant="outline" onClick={loadMore} disabled={loading}>
@@ -328,25 +328,25 @@ export function CounsellorCard({
         }
       }}
     >
-      <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+      <article className="rounded-xl border border-line bg-white p-5 shadow-xs">
         <div className="flex flex-wrap justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-lg font-semibold">{lead.full_name}</h2>
             <a
               href={`tel:${lead.student_phone}`}
-              className="mt-2 inline-flex items-center gap-2 font-semibold text-teal-800"
+              className="mt-2 inline-flex items-center gap-2 font-semibold text-primary"
             >
               <Phone size={17} />
               {lead.student_phone}
               <span className="sr-only"> · Call student</span>
             </a>
           </div>
-          <span className="h-fit rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
+          <span className="h-fit rounded-md bg-sand px-2 py-1 text-xs font-semibold text-[#3E4F59]">
             {lead.pipeline_stage}
           </span>
         </div>
-        <div className="my-4 rounded-lg bg-slate-50 p-3">
-          <p className="text-xs font-medium text-slate-500">
+        <div className="my-4 rounded-lg bg-[#FBF9F4] p-3">
+          <p className="text-xs font-medium text-muted">
             {lead.queue === "missed"
               ? "Missed visit / follow-up timing"
               : "Timing"}
@@ -378,14 +378,14 @@ export function CounsellorCard({
         )}
       </article>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-slate-950/50" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-[rgba(16,47,64,.55)]" />
         <Dialog.Content className="fixed inset-y-0 right-0 z-50 w-full max-w-xl overflow-y-auto bg-white p-5 shadow-xl outline-none sm:p-7">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="text-2xl font-bold tracking-tight">
                 {lead.full_name}
               </Dialog.Title>
-              <Dialog.Description className="mt-2 text-sm text-slate-500">
+              <Dialog.Description className="mt-2 text-sm text-muted">
                 {lead.student_phone} · {branch.name} · Times in IST
               </Dialog.Description>
             </div>

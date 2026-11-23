@@ -43,8 +43,8 @@ export function BranchManagement({ branches }: { branches: Branch[] }) {
   return (
     <section className="panel space-y-5">
       <h2 className="section-title">Branch management</h2>
-      <details className="rounded-lg border border-slate-200 p-4">
-        <summary className="font-semibold text-teal-800">Create branch</summary>
+      <details className="rounded-lg border border-line p-4">
+        <summary className="font-semibold text-primary">Create branch</summary>
         <ActionForm
           action={createBranch}
           submit="Create branch"
@@ -57,12 +57,12 @@ export function BranchManagement({ branches }: { branches: Branch[] }) {
         {branches.map((b) => (
           <details
             key={b.id}
-            className="rounded-xl border border-slate-200 p-5"
+            className="rounded-xl border border-line p-5"
           >
             <summary className="flex flex-wrap justify-between gap-3 font-semibold">
               <span>
                 {b.name} · {b.code}{" "}
-                <span className="font-normal text-slate-500">
+                <span className="font-normal text-muted">
                   · {b.students?.[0]?.count || 0} leads
                 </span>
               </span>
