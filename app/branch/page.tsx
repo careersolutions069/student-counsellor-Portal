@@ -9,6 +9,7 @@ export default async function Page({
     q?: string;
     stage?: string;
     tab?: string;
+    appt?: string;
   }>;
 }) {
   const params = await searchParams;

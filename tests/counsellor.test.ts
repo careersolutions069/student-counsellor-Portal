@@ -53,6 +53,7 @@ test("WhatsApp invitation includes branch, visit time and maps safely", () => {
   assert.equal(url.origin, "https://wa.me");
   assert.equal(url.pathname, "/919000000001");
   const message = url.searchParams.get("text")!;
+  assert.ok(message.includes("The Career Solutions") && !/Career Solution(?!s)|The The/.test(message), "Agency name is exact");
   for (const value of [
     "Aditi & family",
     "21 November 2026",

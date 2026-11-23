@@ -10,13 +10,22 @@ export function ActionForm({
   variant = "default",
   className = "",
   disabled = false,
+  note,
+  noteId,
+  hideSubmit = false,
 }: {
   action: (state: ActionState, form: FormData) => Promise<ActionState>;
-  children?: React.ReactNode;
+  /** Render-prop form receives the pending state (used by FileRow to show Uploading…). */
+  children?: React.ReactNode | ((pending: boolean) => React.ReactNode);
   submit: string;
   variant?: "default" | "outline";
   className?: string;
   disabled?: boolean;
+  /** Short explanation shown beside the submit button, e.g. what is still required. */
+  note?: React.ReactNode;
+  noteId?: string;
+  /** For forms that submit themselves (FileRow in submit mode). */
+  hideSubmit?: boolean;
 }) {
   const [state, formAction, pending, onSubmit] = useUploadAction<ActionState>(
     async (previous: ActionState, form: FormData) => {
@@ -32,7 +41,7 @@ export function ActionForm({
   return (
     <form action={formAction} onSubmit={onSubmit} aria-busy={pending} className={`space-y-4 ${className}`}>
       <fieldset disabled={pending} className="contents">
-        {children}
+        {typeof children === "function" ? children(pending) : children}
       </fieldset>
       {state.error && (
         <p
@@ -50,10 +59,13 @@ export function ActionForm({
           {state.success}
         </p>
       )}
-      <Button type="submit" variant={variant} disabled={pending || disabled} aria-busy={pending}>
-        {pending && <LoaderCircle size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />}
-        {pending ? "Please wait…" : submit}
-      </Button>
+      {!hideSubmit && <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <Button type="submit" variant={variant} disabled={pending || disabled} aria-busy={pending} aria-describedby={note ? noteId : undefined}>
+          {pending && <LoaderCircle size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />}
+          {pending ? "Please wait…" : submit}
+        </Button>
+        {note && <p id={noteId} className="min-w-0 flex-1 basis-56 text-sm text-[#3E4F59]">{note}</p>}
+      </div>}
     </form>
   );
 }

@@ -47,7 +47,7 @@ export function Shell({
         <div className="flex items-center gap-2.5 px-2">
           <BrandMark size={30} />
           <div className="leading-tight">
-            <span className="block text-base font-bold">Career Solution</span>
+            <span className="block text-base font-bold">The Career Solutions</span>
             {!branch && (
               <span className="text-xs text-[#B9D4D9]">{role} · All India</span>
             )}
@@ -76,7 +76,7 @@ export function Shell({
           />
           <BrandMark size={28} />
           <div className="min-w-0 flex-1 leading-tight">
-            <strong className="block">Career Solution</strong>
+            <strong className="block">The Career Solutions</strong>
             <span className="block truncate text-xs text-[#B9D4D9]">
               {name} · {branch || "All India"}
             </span>
@@ -103,7 +103,7 @@ export function StudentShell({
         <div className="mx-auto flex max-w-[1200px] items-center gap-3 px-4 py-2.5 sm:px-8 sm:py-3.5">
           <BrandMark size={32} />
           <span className="text-[17px] font-bold tracking-[-0.01em] sm:text-lg">
-            Career Solution
+            The Career Solutions
           </span>
           <span className="hidden border-l border-[#2B4D5E] pl-3 text-sm text-[#B9D4D9] sm:inline">
             Student portal
@@ -122,7 +122,7 @@ export function StudentShell({
         {children}
       </main>
       <footer className="mx-auto max-w-[1200px] px-4 pb-10 pt-2 text-[13px] text-muted sm:px-8">
-        Career Solution · Only you and your branch can see this page.
+        The Career Solutions · Student counselling &amp; college admissions
       </footer>
     </div>
   );

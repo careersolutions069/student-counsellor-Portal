@@ -28,4 +28,4 @@ export function indiaDayBounds(now = new Date()) {
   };
 }
 
-export const registrationSchema = z.string().trim().toUpperCase().regex(/^CS-[A-Z0-9]+-\d{4}-[A-Z0-9]{4,8}$/, "Enter a valid Career Solution registration number.");
+export const registrationSchema = z.string().trim().toUpperCase().regex(/^CS-[A-Z0-9]+-\d{4}-[A-Z0-9]{4,8}$/, "Enter a valid registration number from The Career Solutions.");

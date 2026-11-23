@@ -28,7 +28,7 @@ function Hinted({
     </div>
   );
 }
-const submitClass = "[&>button]:h-[52px] [&>button]:w-full [&>button]:rounded-xl [&>button]:text-base";
+const submitClass = "[&>div>button]:h-[52px] [&>div>button]:w-full [&>div>button]:rounded-xl [&>div>button]:text-base";
 export default async function Login({
   searchParams,
 }: {
@@ -41,20 +41,20 @@ export default async function Login({
       <header className="on-navy flex items-center gap-2.5 bg-navy px-5 py-4 text-white lg:hidden">
         <BrandMark size={32} />
         <div className="leading-tight">
-          <span className="block text-[17px] font-bold tracking-[-0.01em]">Career Solution</span>
+          <span className="block text-[17px] font-bold tracking-[-0.01em]">The Career Solutions</span>
           <span className="text-xs text-[#B9D4D9]">Admissions portal</span>
         </div>
       </header>
 
       {/* Desktop: brand half */}
       <section
-        aria-label="About Career Solution"
+        aria-label="About The Career Solutions"
         className="hidden min-w-0 flex-1 flex-col gap-7 bg-navy px-14 py-12 text-white lg:flex"
       >
         <div className="flex items-center gap-3">
           <BrandMark size={40} />
           <div className="leading-tight">
-            <span className="block text-[22px] font-bold tracking-[-0.015em]">Career Solution</span>
+            <span className="block text-[22px] font-bold tracking-[-0.015em]">The Career Solutions</span>
             <span className="text-sm text-[#B9D4D9]">Student counselling &amp; college admissions</span>
           </div>
         </div>
@@ -89,7 +89,7 @@ export default async function Login({
             <p className="mb-1.5 hidden text-sm font-semibold text-primary lg:block">Welcome back</p>
             <h1 className="text-[27px] font-bold leading-[1.15] tracking-[-0.025em] text-navy lg:text-[34px] lg:leading-[1.1] lg:tracking-[-0.03em]">
               <span className="lg:hidden">Sign in to follow your admission</span>
-              <span className="hidden lg:inline">Sign in to Career Solution</span>
+              <span className="hidden lg:inline">Sign in to The Career Solutions</span>
             </h1>
           </div>
           {!configured() && (
@@ -113,7 +113,7 @@ export default async function Login({
             </TabsList>
             <TabsContent value="student">
               <p className="mb-4 text-sm leading-normal text-muted lg:text-[15px]">
-                Your counsellor shares your registration number with you after you register at a Career Solution branch.
+                Your counsellor shares your registration number with you after you register at a branch of The Career Solutions.
               </p>
               <ActionForm action={studentLogin} submit="Sign in" className={submitClass}>
                 <Hinted

@@ -3,7 +3,7 @@ import { CounsellorDashboard } from "@/components/counsellor-dashboard";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; page?: string }>;
+  searchParams: Promise<{ tab?: string; page?: string; lead?: string }>;
 }) {
   const params = await searchParams;
   const requested = Number(params.page || 1);
@@ -11,5 +11,5 @@ export default async function Page({
     Number.isSafeInteger(requested) && requested > 0 && requested <= 1000000
       ? requested
       : 1;
-  return <CounsellorDashboard tab={params.tab} page={page} />;
+  return <CounsellorDashboard tab={params.tab} page={page} lead={params.lead} />;
 }

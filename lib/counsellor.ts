@@ -67,6 +67,6 @@ export function inviteUrl(
     timeStyle: "short",
     timeZone: "Asia/Kolkata",
   }).format(new Date(scheduledAt));
-  const text = `Hello ${name}, your Career Solution face-to-face counselling visit is arranged for ${visit} IST.\nBranch: ${branch.name}\nAddress: ${branch.address}${branch.google_maps_url ? `\nGoogle Maps: ${branch.google_maps_url}` : ""}\nWe look forward to meeting you.`;
+  const text = `Hello ${name}, your face-to-face counselling visit with The Career Solutions is arranged for ${visit} IST.\nBranch: ${branch.name}\nAddress: ${branch.address}${branch.google_maps_url ? `\nGoogle Maps: ${branch.google_maps_url}` : ""}\nWe look forward to meeting you.`;
   return `https://wa.me/91${phone}?text=${encodeURIComponent(text)}`;
 }

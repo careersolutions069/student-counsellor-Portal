@@ -76,7 +76,7 @@ export function MobileNav({
           <div className="flex items-center justify-between">
             <Dialog.Title className="flex items-center gap-2.5 text-base font-bold">
               <BrandMark size={28} />
-              Career Solution
+              The Career Solutions
             </Dialog.Title>
             <Dialog.Close asChild>
               <button

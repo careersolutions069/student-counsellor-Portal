@@ -9,7 +9,8 @@ const NEXT_HINT=[
  'your branch submits your college applications.',
  'a college confirms your admission.',
 ];
-export function AdmissionProgress({current}:{current:number}) {
+/** documentsVerified: every checklist item is Verified. A later stage can be reached while documents are still open, so that stage reflects the real checklist. */
+export function AdmissionProgress({current,documentsVerified=true}:{current:number;documentsVerified?:boolean}) {
  const router=useRouter();
  useEffect(()=>{
   function refresh() {
@@ -26,13 +27,15 @@ export function AdmissionProgress({current}:{current:number}) {
   <h2 id="progress" className="text-[15px] font-semibold text-muted">Admission progress</h2>
   <p className="mt-1.5 text-sm text-muted">Stage {current+1} of {ADMISSION_STEPS.length}</p>
   <p className="text-[23px] font-bold tracking-[-0.025em] text-navy lg:text-[28px]">{stage}</p>
-  <div aria-hidden="true" className="mt-3 grid grid-cols-5 gap-1 lg:hidden">{ADMISSION_STEPS.map((step,index)=><span key={step} className={`h-2 rounded ${index<current?'bg-primary':index===current?'bg-marigold':'bg-line'}`}/>)}</div>
+  <div aria-hidden="true" className="mt-3 grid grid-cols-5 gap-1 lg:hidden">{ADMISSION_STEPS.map((step,index)=><span key={step} className={`h-2 rounded ${index===2&&index<current&&!documentsVerified?'bg-line':index<current?'bg-primary':index===current?'bg-marigold':'bg-line'}`}/>)}</div>
   <ol className="mt-4 flex flex-col gap-2.5 lg:mt-[22px] lg:grid lg:grid-cols-5 lg:gap-1.5">{ADMISSION_STEPS.map((step,index)=>{
-   const done=index<current,here=index===current;
+   const docsOpen=index===2&&index<current&&!documentsVerified;
+   const done=index<current&&!docsOpen,here=index===current;
    return <li key={step} aria-current={here?'step':undefined} className="flex items-center gap-3 lg:flex-col lg:items-stretch lg:gap-2">
     <span aria-hidden="true" className={`flex size-6 shrink-0 items-center justify-center rounded-full lg:h-2 lg:w-auto lg:rounded ${done?'bg-primary text-white':here?'bg-marigold':'bg-line'}`}>{done&&<Check size={14} strokeWidth={3} className="lg:hidden"/>}</span>
     <span className={`flex-1 text-sm leading-tight lg:text-[13px] ${here?'font-bold text-navy':done?'':'text-muted'}`}>{step}</span>
     {(done||here)&&<span className={`text-xs font-semibold ${here?'text-marigold-text':'text-[#0B5650]'}`}>{here?'You are here':'Done'}</span>}
+    {docsOpen&&<a href="#docs" className="text-xs font-semibold text-warning underline-offset-2 hover:underline">Still open</a>}
    </li>;})}</ol>
   <p className="mt-5 border-t border-sand pt-4 text-sm text-[#3E4F59] lg:mt-[22px]">{last?'All five stages complete.':<>Next: <strong>{ADMISSION_STEPS[current+1]}</strong> — {NEXT_HINT[current]}</>}</p>
   <p className="sr-only" aria-live="polite">Updates automatically while this page is open.</p>

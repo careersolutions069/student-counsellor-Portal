@@ -19,7 +19,7 @@ export function validateDocumentFile(file:{name:string;type:string;size:number},
  return {extension:extension!,mime:pdf?'application/pdf':jpg?'image/jpeg':'image/png'};
 }
 export function loginMessage(name:string,registration:string,origin:string) {
- return `Career Solution — Student Portal Login\n\nStudent Name: ${name}\nRegistration Number: ${registration}\nPortal Login URL: ${new URL('/login',origin).href}\n\nSelect Student login and sign in using your Registration Number and Date of Birth.`;
+ return `The Career Solutions — Student Portal Login\n\nStudent Name: ${name}\nRegistration Number: ${registration}\nPortal Login URL: ${new URL('/login',origin).href}\n\nSelect Student login and sign in using your Registration Number and Date of Birth.`;
 }
 export const ADMISSION_STEPS=['Registered','Colleges Shortlisted','Documents Verified','Applied','Admission Confirmed'];
 export function admissionStep(stage:string,shortlists:{admission_status:string|null}[],documents:{status:string}[]) {

@@ -15,6 +15,8 @@ test('login message contains the standard slip without disclosing DOB',()=>{
  const text=loginMessage('Aditi & family','CS-PAT-2026-0001','https://portal.example/path');
  for(const value of ['Aditi & family','CS-PAT-2026-0001','https://portal.example/login','Date of Birth']) assert.ok(text.includes(value));
  assert.ok(!text.includes('/path'));
+ assert.ok(text.startsWith('The Career Solutions — Student Portal Login'),'Agency name is exact');
+ assert.ok(!/Career Solution(?!s)|The The/.test(text));
 });
 test('admission tracker uses public evidence and never verifies an empty checklist',()=>{
  assert.equal(admissionStep('Counselling',[],[]),0);

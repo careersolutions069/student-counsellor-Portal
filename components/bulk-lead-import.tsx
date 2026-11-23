@@ -4,7 +4,7 @@ import {LoaderCircle} from 'lucide-react';
 import {useUploadAction} from '@/components/use-upload-action';
 import {Button} from '@/components/ui/button';
 import {Select} from '@/components/fields';
-import {UploadField} from '@/components/upload-field';
+import {FileRow} from '@/components/file-row';
 import {importLeads,type ImportResult} from '@/app/imports/actions';
 import type {Staff} from '@/lib/auth';
 import type {Branch} from '@/components/staff-management';
@@ -22,11 +22,16 @@ export function BulkLeadImport({branches,members,owner,defaultBranch}:{branches:
   <Button type="button" variant="outline" onClick={()=>void template()}>Download Sample CSV Template</Button>
   <form action={action} onSubmit={onSubmit} aria-busy={pending||parsing} onReset={event=>event.preventDefault()} className="space-y-5"><fieldset className="contents" disabled={pending}>
    {owner?<Select label="Import into branch" name="branch_id" value={branch} onChange={event=>setBranch(event.target.value)} required><option value="">Select a branch</option>{branches.filter(b=>b.is_active).map(b=><option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}</Select>:<><input type="hidden" name="branch_id" value={branch}/><p className="text-sm font-medium">Import into {branches[0]?.name}</p></>}
-   <UploadField label="Lead spreadsheet" name="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required onChange={async event=>{
-    const file=event.currentTarget.files?.[0];const version=++generation.current;setPreview(undefined);setParseError('');if(!file){setParsing(false);return;}setParsing(true);
-    try{const {parseLeadFile}=await import('@/lib/lead-import');const parsed=parseLeadFile(new Uint8Array(await file.arrayBuffer()),file.name);if(version===generation.current)setPreview({rows:parsed.rows,valid:parsed.valid.length,invalid:parsed.invalid_count,duplicate:parsed.duplicate_count,warnings:parsed.parent_warning_count});}
-    catch(error){if(version===generation.current)setParseError(error instanceof Error?error.message:'Unable to read file.');}finally{if(version===generation.current)setParsing(false);}
-   }}/>
+   <div className="rounded-xl border border-dashed border-[#9CC9C1] bg-[#F4FAF8] p-3.5">
+    <FileRow label="Lead spreadsheet" name="file" mode="select" busy={pending} readyText="ready to import"
+     accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+     hint="CSV or Excel (.xlsx, .xls) · up to 4 MB. Nothing is imported until you select Import Valid Leads."
+     onFile={async file=>{
+      const version=++generation.current;setPreview(undefined);setParseError('');if(!file){setParsing(false);return;}setParsing(true);
+      try{const {parseLeadFile}=await import('@/lib/lead-import');const parsed=parseLeadFile(new Uint8Array(await file.arrayBuffer()),file.name);if(version===generation.current)setPreview({rows:parsed.rows,valid:parsed.valid.length,invalid:parsed.invalid_count,duplicate:parsed.duplicate_count,warnings:parsed.parent_warning_count});}
+      catch(error){if(version===generation.current)setParseError(error instanceof Error?error.message:'Unable to read file.');}finally{if(version===generation.current)setParsing(false);}
+     }}/>
+   </div>
    <Select label="Tele-counsellor assignment" name="assignment_mode" value={mode} onChange={event=>setMode(event.target.value)}><option value="unassigned">Leave Unassigned</option><option value="round_robin">Round-Robin Auto-Assign</option><option value="one">Assign All to One Tele-Counsellor</option></Select>
    {mode==='one'&&<Select key={branch} label="Assign all leads to" name="one_caller" required><option value="">Select a tele-counsellor</option>{callers.map(p=><option key={p.id} value={p.id}>{p.full_name}</option>)}</Select>}
    {mode==='round_robin'&&<fieldset key={branch} className="space-y-3 rounded-lg border border-line p-4"><legend className="px-2 text-sm font-semibold">Select active tele-counsellors</legend>{callers.length?callers.map(p=><label key={p.id} className="flex gap-2 text-sm"><input type="checkbox" name="caller_ids" value={p.id} defaultChecked/>{p.full_name}</label>):<p className="text-sm text-muted">No active tele-counsellors in this branch. Choose Leave Unassigned or add staff first.</p>}</fieldset>}

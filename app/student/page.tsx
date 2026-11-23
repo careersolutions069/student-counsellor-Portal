@@ -7,24 +7,26 @@ import { StatusBadge, StudentShell } from "@/components/shell";
 import { admissionStep, type StudentDocument } from "@/lib/student-documents";
 import { requireStudent, type Portal } from "@/lib/auth";
 import { visitDate, visitTile, visitTime } from "@/lib/utils";
-/** The document that needs the student, if uploads are on: Re-upload Needed first, then Pending. */
-function documentAction(student: Portal): StudentDocument | undefined {
-  if (!student.allow_student_upload) return undefined;
+/** The checklist item that needs the student: Re-upload Needed first, then Pending. Independent of upload permission. */
+function outstandingDocument(student: Portal): StudentDocument | undefined {
   return (
     student.documents.find((d) => d.status === "Re-upload Needed") ||
     student.documents.find((d) => d.status === "Pending")
   );
 }
+function documentNeed(doc: StudentDocument) {
+  return doc.status === "Re-upload Needed" ? `${doc.document_name} needs to be uploaded again` : `${doc.document_name} is still needed`;
+}
 function NextStep({ student }: { student: Portal }) {
   const appointment = student.appointments[0];
-  const doc = documentAction(student);
+  const doc = outstandingDocument(student);
+  const uploads = student.allow_student_upload;
   const eyebrow = (
     <p className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.05em] text-marigold-soft">
       <span aria-hidden="true" className="size-2 rounded-full bg-marigold" />
       Your next step
     </p>
   );
-  const docLabel = doc && `${doc.document_name} — ${doc.status === "Re-upload Needed" ? "re-upload" : "upload"}`;
   if (appointment) {
     const tile = visitTile(appointment.scheduled_at);
     return (
@@ -51,7 +53,7 @@ function NextStep({ student }: { student: Portal }) {
             <div className="flex gap-2.5">
               <MapPin size={20} aria-hidden="true" className="mt-0.5 shrink-0 text-marigold-soft lg:hidden" />
               <address className="text-[15px] not-italic leading-normal text-[#E6EEF0]">
-                <strong className="text-white">Career Solution, {student.branch.name}</strong>
+                <strong className="text-white">The Career Solutions, {student.branch.name}</strong>
                 <br />
                 {student.branch.address}
               </address>
@@ -66,34 +68,42 @@ function NextStep({ student }: { student: Portal }) {
           </div>
         </div>
         {doc && (
-          <a href={`#doc-${doc.id}`} className="flex items-center gap-3 rounded-xl bg-navy-2 px-4 py-3 text-white">
-            <span aria-hidden="true" className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-[#FFF1E0] text-sm font-bold text-[#9A4A00]">1</span>
-            <span className="flex-1">
-              Also needed before your visit: <strong>{docLabel}</strong>
+          <a href={`#doc-${doc.id}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-navy-2 px-4 py-3 text-white">
+            <span aria-hidden="true" className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-[#FFF1E0] text-sm font-bold text-[#9A4A00]">!</span>
+            <span className="min-w-0 flex-[1_1_12rem]">
+              Also needed: <strong>{documentNeed(doc)}</strong>
+              {!uploads && <span className="block text-sm text-[#B9D4D9]">Online uploads are turned off. Ask your counsellor how to share it.</span>}
             </span>
-            <span className="font-bold text-marigold-soft">Upload now →</span>
+            <span className="ml-[38px] font-bold text-marigold-soft sm:ml-0">{uploads ? "Upload now →" : "See checklist →"}</span>
           </a>
         )}
       </section>
     );
   }
   if (doc) {
+    const reupload = doc.status === "Re-upload Needed";
     return (
       <section aria-labelledby="next" className="on-navy flex min-w-0 flex-col gap-3.5 rounded-[18px] bg-navy p-5 text-white lg:flex-[7_1_520px] lg:rounded-[20px] lg:px-7 lg:py-6">
         {eyebrow}
         <h2 id="next" className="text-[22px] font-bold tracking-[-0.02em] lg:text-[26px]">
-          {doc.status === "Re-upload Needed" ? "Re-upload" : "Upload"} your {doc.document_name}
+          {uploads ? `${reupload ? "Re-upload" : "Upload"} your ${doc.document_name}` : `Your branch needs your ${doc.document_name}`}
         </h2>
+        {!uploads && (
+          <p className="text-[#DCE9EC]">
+            {reupload ? `Your branch has requested a new copy of your ${doc.document_name}.` : `Your branch has asked for your ${doc.document_name}.`}{" "}
+            Online uploads are turned off. Ask your counsellor how to share it.
+          </p>
+        )}
         {doc.remarks && (
           <>
             <p className="text-[#DCE9EC]">
-              {doc.status === "Re-upload Needed" ? "Your branch checked the file you sent and left a note:" : "A note from your branch:"}
+              {reupload ? "Note from your branch about the file you sent:" : "Note from your branch:"}
             </p>
             <blockquote className="whitespace-pre-line rounded-xl bg-navy-2 px-4 py-3 text-white">“{doc.remarks}”</blockquote>
           </>
         )}
         <Button asChild variant="onNavy" size="lg" className="self-stretch rounded-xl sm:self-start">
-          <a href={`#doc-${doc.id}`}>Go to {doc.document_name}</a>
+          <a href={`#doc-${doc.id}`}>{uploads ? `Go to ${doc.document_name}` : "See your checklist"}</a>
         </Button>
       </section>
     );
@@ -115,7 +125,7 @@ function NextStep({ student }: { student: Portal }) {
 }
 function Shortlist({ shortlists }: { shortlists: Portal["shortlists"] }) {
   const status = (value: string | null) =>
-    value ? <StatusBadge status={value} /> : <StatusBadge status="Pending" label="Awaiting update" />;
+    value ? <StatusBadge status={value} /> : <span className="text-muted">—<span className="sr-only">No admission status recorded</span></span>;
   return (
     <section aria-labelledby="shortlist" className="overflow-hidden lg:rounded-[20px] lg:border lg:border-line lg:bg-white">
       <div className="flex flex-wrap items-baseline justify-between gap-1 pb-3 lg:gap-3 lg:px-6 lg:pb-3.5 lg:pt-5">
@@ -232,7 +242,7 @@ export default async function StudentPage() {
 
       <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch lg:gap-6">
         <NextStep student={student} />
-        <AdmissionProgress current={admissionStep(student.pipeline_stage, student.shortlists, student.documents)} />
+        <AdmissionProgress current={admissionStep(student.pipeline_stage, student.shortlists, student.documents)} documentsVerified={student.documents.length > 0 && student.documents.every((d) => d.status === "Verified")} />
       </div>
 
       <Shortlist shortlists={student.shortlists} />

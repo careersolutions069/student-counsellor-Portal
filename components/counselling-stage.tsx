@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { ActionForm } from '@/components/action-form';
-import { UploadField } from '@/components/upload-field';
+import { FileRow } from '@/components/file-row';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/shell';
 import { getCounsellingWorkspace, saveCounsellingStates, uploadCounsellingPdf, reuseCounsellingChoice, recordCounsellingOutcome, setCounsellingVisibility } from '@/app/counselling/actions';
@@ -37,7 +37,7 @@ function Workspace({studentId}:{studentId:string}) {
    <p className="break-words text-sm">{document.file_name}</p>
    {document.reused_from_doc_id&&<p className="text-xs text-muted">Reused choice PDF · preserved copy</p>}
    <Badge>{document.show_to_student?'Shared with Student':'Hidden from Student'}</Badge>
-   <div className="flex flex-wrap gap-2"><Button asChild variant="outline"><a href={`/counselling-documents/${document.id}`} target="_blank" rel="noreferrer">View PDF</a></Button><Button asChild variant="outline"><a href={`/counselling-documents/${document.id}?download=1`} target="_blank" rel="noreferrer">Download PDF</a></Button></div>
+   <div className="flex flex-wrap gap-2"><Button asChild variant="neutral" size="sm"><a href={`/counselling-documents/${document.id}`} target="_blank" rel="noreferrer">View PDF</a></Button><Button asChild variant="neutral" size="sm"><a href={`/counselling-documents/${document.id}?download=1`} target="_blank" rel="noreferrer">Download PDF</a></Button></div>
    <ActionForm key={`visibility-${document.created_at}-${document.show_to_student}`} action={save(setCounsellingVisibility)} submit={document.show_to_student?'Hide from Student':'Show to Student'} variant="outline">
     <Version doc={document}/><input type="hidden" name="show_to_student" value={String(!document.show_to_student)}/>
    </ActionForm>
@@ -51,10 +51,14 @@ function Workspace({studentId}:{studentId:string}) {
    <h4 className="font-semibold">{documentLabel(category,phase)}{category==='choice_pdf'?' (Required)':''}</h4>
    {document&&fileCard(document)}
    {inherited?<p className="text-sm text-muted">{document?'Inherited from the same stage group. No re-upload needed.':'No stage document yet. Add it in the first phase of this group.'}</p>:unlocked?<>
-    <ActionForm key={`upload-${category}-${phase}-${document?.created_at||'new'}`} action={save(uploadCounsellingPdf)} submit={document?'Replace PDF':category==='choice_pdf'?'Upload New Choice PDF':'Upload PDF'} variant="outline">
-     <Version doc={document}/><input type="hidden" name="doc_category" value={category}/><input type="hidden" name="phase_number" value={phase||''}/>
-     <UploadField label={`PDF for ${documentLabel(category,phase)}`} name="file" accept=".pdf,application/pdf" required/>
-     <p className="text-xs text-muted">PDF only · Max 4 MB. Uploads and replacements are hidden until you share them.</p>
+    <ActionForm key={`upload-${category}-${phase}`} action={save(uploadCounsellingPdf)} submit="Upload" hideSubmit>
+     {pending=><>
+      <Version doc={document}/><input type="hidden" name="doc_category" value={category}/><input type="hidden" name="phase_number" value={phase||''}/>
+      <FileRow label={documentLabel(category,phase)} name="file" accept=".pdf,application/pdf" mode="submit" busy={pending}
+       hint="PDF only · up to 4 MB. New and replacement PDFs stay hidden from the student until you share them."
+       current={document?{name:document.file_name||'Uploaded PDF'}:null}
+       leading={<p className="font-semibold text-ink">{document?'Replace this PDF':'Add the PDF'}</p>}/>
+     </>}
     </ActionForm>
     {category==='choice_pdf'&&data.documents.filter(d=>d.doc_category==='choice_pdf'&&d.phase_number!<phase!).sort((a,b)=>a.phase_number!-b.phase_number!).map(source=><ActionForm key={`reuse-${source.id}-${source.created_at}-${document?.created_at}`} action={save(reuseCounsellingChoice)} submit={`Use Same Choice PDF from Phase ${source.phase_number}`} variant="outline"><Version doc={document}/><input type="hidden" name="phase_number" value={phase!}/><input type="hidden" name="source_doc_id" value={source.id}/></ActionForm>)}
    </>:<p className="text-sm text-muted">Upload the corresponding choice PDF first.</p>}

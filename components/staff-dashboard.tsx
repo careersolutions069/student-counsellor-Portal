@@ -26,6 +26,7 @@ export type DashboardFilters = {
   period?: string;
   from?: string;
   to?: string;
+  appt?: string;
 };
 const stages = [
   "New Enquiry",
@@ -116,7 +117,7 @@ export async function StaffDashboard({
   const [branchResult, staffResult, studentResult, kpiResult, branchCounts, meetingResult, transferResult] =
     await Promise.all([
       branchesQuery,
-      tab === "students" || tab === "staff" || tab === "history" ? staffQuery : null,
+      tab === "students" || tab === "staff" || tab === "history" || tab === "appointments" ? staffQuery : null,
       tab === "students" || (owner && tab === "history") ? studentsQuery : null,
       client.rpc("dashboard_kpis", { selected_branch: selectedBranch }),
       tab === "branches" ? client.rpc("branch_student_counts") : null,
@@ -265,7 +266,7 @@ export async function StaffDashboard({
           <Button type="submit">Apply branch filter</Button>
         </form>
       )}
-      <section aria-label="Key numbers" className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
+      <section aria-label="Key numbers" className={`${tab === "appointments" ? "hidden lg:grid" : "grid"} grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5`}>
         <Stat label="Total Leads" value={kpis.total_leads} />
         <Stat label="Visits Attended" value={kpis.f2f_attended} hint="Student came to the branch" tone="teal" />
         <Stat label="Visit Details Completed" value={kpis.visit_details_completed} hint="Visit form saved by branch" tone="navy" />
@@ -316,7 +317,16 @@ export async function StaffDashboard({
         <StaffManagement members={members} branches={branches} owner={owner} />
       )}
       {tab === "branches" && owner && <BranchManagement branches={branches} />}
-      {tab === "appointments" && <Appointments meetings={meetings} />}
+      {tab === "appointments" && (
+        <Appointments
+          meetings={meetings}
+          selectedId={z.uuid().safeParse(filters.appt).success ? filters.appt : undefined}
+          hrefFor={(id) => `${href("appointments", page)}&appt=${id}`}
+          backHref={href("appointments", page)}
+          staffNames={Object.fromEntries(members.map((m) => [m.id, m.full_name]))}
+          branchNames={owner ? Object.fromEntries(branches.map((b) => [b.id, b.name])) : undefined}
+        />
+      )}
       {tab === "history" && (
         <>
           {owner ? <section className="panel space-y-5"><h2 className="section-title">Transfer student</h2><p className="text-sm text-muted">Find the student, choose an active destination branch, and enter a reason.</p>

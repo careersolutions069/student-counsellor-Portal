@@ -29,3 +29,7 @@ export function visitTile(value: string) {
   const p = indiaParts(value, { weekday: "short", day: "numeric", month: "short" });
   return { weekday: p.weekday.toUpperCase(), day: p.day, month: p.month.toUpperCase() };
 }
+/** "+91 98350 41267" for a stored 10-digit Indian number; anything else unchanged. */
+export function displayPhone(value: string | null | undefined) {
+  return value && /^[0-9]{10}$/.test(value) ? `+91 ${value.slice(0, 5)} ${value.slice(5)}` : value || "";
+}

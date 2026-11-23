@@ -1,4 +1,4 @@
-# Career Solution
+# The Career Solutions
 
 A counselling and admission portal for managing student enquiries, calls, branch visits, college recommendations and admissions across India.
 

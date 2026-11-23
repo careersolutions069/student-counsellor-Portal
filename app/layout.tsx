@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Mono, DM_Sans } from "next/font/google";
 import "./globals.css";
 const sans = DM_Sans({
@@ -13,8 +13,14 @@ const mono = DM_Mono({
   variable: "--font-dm-mono",
   display: "swap",
 });
+// Phones shrink the layout when the keyboard opens, so the sticky Save call outcome bar stays above it.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content",
+};
 export const metadata: Metadata = {
-  title: "Career Solution | Student counselling",
+  title: "The Career Solutions | Student counselling",
   description:
     "Your counselling, college shortlist and admission journey in one place.",
   robots: { index: false, follow: false },
