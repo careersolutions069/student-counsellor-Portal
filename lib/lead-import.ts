@@ -5,7 +5,7 @@ export const MAX_IMPORT_ROWS=5000;
 export const SAMPLE_CSV='Student Name,Student Phone,Parent Phone,Lead Source,Target Course,Academic Stream,Marks,City,State\r\nSample Student,9876543210,9876543211,School,MBBS,PCB,610,Patna,Bihar\r\n';
 const aliases:Record<string,string>={'name':'full_name','student name':'full_name','phone':'student_phone','mobile':'student_phone','student phone':'student_phone','parent phone':'parent_phone','father phone':'parent_phone','source':'lead_source','lead source':'lead_source','course':'target_course','target course':'target_course','stream':'academic_stream','academic stream':'academic_stream','marks':'percentage_or_score','score':'percentage_or_score','city':'city','state':'state'};
 export type LeadRow={row_number:number;full_name:string;student_phone:string;parent_phone:string|null;lead_source:string;target_course:string;academic_stream:string;percentage_or_score:string;city:string;state:string;status:'valid'|'invalid'|'duplicate';reason:string};
-export type ImportSummary={imported_count:number;duplicate_count:number;invalid_count:number;parent_warning_count:number;rows:{row_number:number;status:string;reason:string}[]};
+export type ImportSummary={imported_count:number;duplicate_count:number;invalid_count:number;parent_warning_count:number;held_count?:number;requeued_count?:number;rows:{row_number:number;status:string;reason:string}[]};
 // Bound expanded XLSX content before the parser allocates worksheet XML.
 function checkArchive(bytes:Uint8Array) {
  if(bytes[0]!==0x50||bytes[1]!==0x4b)return;

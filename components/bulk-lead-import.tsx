@@ -3,7 +3,7 @@ import {useState,useRef} from 'react';
 import {LoaderCircle} from 'lucide-react';
 import {useUploadAction} from '@/components/use-upload-action';
 import {Button} from '@/components/ui/button';
-import {Select} from '@/components/fields';
+import {Field,Select} from '@/components/fields';
 import {FileRow} from '@/components/file-row';
 import {importLeads,type ImportResult} from '@/app/imports/actions';
 import type {Staff} from '@/lib/auth';
@@ -22,6 +22,19 @@ export function BulkLeadImport({branches,members,owner,defaultBranch}:{branches:
   <Button type="button" variant="outline" onClick={()=>void template()}>Download Sample CSV Template</Button>
   <form action={action} onSubmit={onSubmit} aria-busy={pending||parsing} onReset={event=>event.preventDefault()} className="space-y-5"><fieldset className="contents" disabled={pending}>
    {owner?<Select label="Import into branch" name="branch_id" value={branch} onChange={event=>setBranch(event.target.value)} required><option value="">Select a branch</option>{branches.filter(b=>b.is_active).map(b=><option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}</Select>:<><input type="hidden" name="branch_id" value={branch}/><p className="text-sm font-medium">Import into {branches[0]?.name}</p></>}
+   <div className="grid gap-4 sm:grid-cols-2">
+    <Field label="Where these leads came from" name="lead_source" maxLength={150} placeholder="e.g. Website form, Partner list"/>
+    <Field label="Campaign / call round" name="campaign" maxLength={150} placeholder="e.g. Medical · Repeat call"/>
+    <Field label="Date received" name="received_on" type="date"/>
+   </div>
+   <Select label="How these students asked to be contacted" name="consent_basis" defaultValue="" required>
+    <option value="">Select one</option>
+    <option value="direct_enquiry">They enquired with The Career Solutions directly</option>
+    <option value="third_party">From a third-party website or list</option>
+    <option value="unknown">Not sure · hold these leads for review</option>
+   </Select>
+   <p className="-mt-3 text-xs text-muted">Leads marked “Not sure” are held out of calling until a Centre Head releases them. A student already in the portal keeps their status, including Do not call.</p>
+   <label className="flex items-start gap-3 rounded-xl border border-line p-3 text-sm"><input type="checkbox" name="requeue" className="mt-0.5 size-5 shrink-0 accent-primary"/><span><strong className="block text-ink">Repeat-call round</strong>Students already in this branch move to this file and campaign and go back in the queue. Held, Do not call and closed students stay out.</span></label>
    <div className="rounded-xl border border-dashed border-[#9CC9C1] bg-[#F4FAF8] p-3.5">
     <FileRow label="Lead spreadsheet" name="file" mode="select" busy={pending} readyText="ready to import"
      accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -41,6 +54,6 @@ export function BulkLeadImport({branches,members,owner,defaultBranch}:{branches:
   {result.error&&<p role="alert" className="rounded-lg bg-danger-bg p-3 text-sm text-danger-text">{result.error}</p>}
   <Button type="submit" disabled={pending||parsing||!preview?.valid||!branch||(mode!=='unassigned'&&!callers.length)} aria-busy={pending||parsing}>{(pending||parsing)&&<LoaderCircle size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true"/>}{parsing?'Reading spreadsheet…':pending?'Importing…':'Import Valid Leads'}</Button>
   </form>
-  {result.summary&&<section className="space-y-3 rounded-lg bg-teal-soft p-4" aria-label="Import result"><h3 className="font-semibold">Import result</h3><p role="status" className="text-sm">{result.summary.imported_count} imported · {result.summary.duplicate_count} duplicates skipped · {result.summary.invalid_count} invalid skipped · {result.summary.parent_warning_count} shared-parent warnings</p><p className="text-sm">Refresh the student list to view imported leads.</p><div className="max-h-80 overflow-auto"><table className="w-full text-left text-sm"><thead><tr><th scope="col" className="p-2">Row</th><th scope="col" className="p-2">Result</th><th scope="col" className="p-2">Reason</th></tr></thead><tbody>{result.summary.rows.map(row=><tr key={row.row_number}><td className="p-2">{row.row_number}</td><td className="p-2">{row.status}</td><td className="p-2">{row.reason}</td></tr>)}</tbody></table></div></section>}
+  {result.summary&&<section className="space-y-3 rounded-lg bg-teal-soft p-4" aria-label="Import result"><h3 className="font-semibold">Import result</h3><p role="status" className="text-sm">{result.summary.imported_count} imported · {result.summary.duplicate_count} duplicates skipped · {result.summary.invalid_count} invalid skipped · {result.summary.parent_warning_count} shared-parent warnings{result.summary.held_count?` · ${result.summary.held_count} held for consent review`:''}{result.summary.requeued_count?` · ${result.summary.requeued_count} already in the portal, back in the queue`:''}</p><p className="text-sm">Refresh the student list to view imported leads.</p><div className="max-h-80 overflow-auto"><table className="w-full text-left text-sm"><thead><tr><th scope="col" className="p-2">Row</th><th scope="col" className="p-2">Result</th><th scope="col" className="p-2">Reason</th></tr></thead><tbody>{result.summary.rows.map(row=><tr key={row.row_number}><td className="p-2">{row.row_number}</td><td className="p-2">{row.status}</td><td className="p-2">{row.reason}</td></tr>)}</tbody></table></div></section>}
  </div></details>;
 }

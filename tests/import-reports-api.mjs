@@ -16,7 +16,7 @@ try{
  assert.equal((await fetch('http://localhost:3000/branch',{headers:{cookie:head.cookie()}})).status,200);
  const manifest=JSON.parse(await readFile('.next/dev/server/server-reference-manifest.json','utf8')).node;const key=Object.entries(manifest).find(([,v])=>v.exportedName==='importLeads')?.[0];assert.ok(key,'Import action compiled');
  async function upload(bytes,name='leads.csv',mode='unassigned',ids=[],targetBranch=branch,actor=head){
-  const form=new FormData();form.set('branch_id',targetBranch);form.set('assignment_mode',mode);if(mode==='one')form.set('one_caller',ids[0]||'');else for(const id of ids)form.append('caller_ids',id);form.set('file',new Blob([bytes],{type:'application/octet-stream'}),name);
+  const form=new FormData();form.set('branch_id',targetBranch);form.set('assignment_mode',mode);form.set('consent_basis','direct_enquiry');form.set('lead_source','QA list');if(mode==='one')form.set('one_caller',ids[0]||'');else for(const id of ids)form.append('caller_ids',id);form.set('file',new Blob([bytes],{type:'application/octet-stream'}),name);
   const body=await encodeReply([{},form]);assert.ok((await new Response(body).blob()).size<4500000);
   const response=await fetch(`http://localhost:3000/${actor===owner?'owner':'branch'}`,{method:'POST',headers:{'Next-Action':key,origin:'http://localhost:3000',cookie:actor.cookie()},body});
   if(response.status!==200)throw Error(`Import HTTP ${response.status}: ${(await response.text()).slice(0,300)}`);return response.text();

@@ -7,6 +7,12 @@ import { dateTime, displayPhone } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NavigationPending } from "@/components/navigation-pending";
 import type { CallerLead, CallerBranch } from "@/lib/counsellor";
+import { ManualCallingDesk } from "@/components/manual-desk";
+import type { ManualDesk } from "@/app/counsellor/manual-actions";
+import { indiaDayBounds } from "@/lib/validation";
+import { SecureDesk } from "@/components/secure-desk";
+import { callProvider } from "@/lib/calling/provider";
+import type { Desk } from "@/lib/secure-calling";
 function timing(lead: CallerLead) {
   const now = Date.now();
   if (lead.queue === "invited" && lead.latest_appointment)
@@ -27,6 +33,29 @@ export async function CounsellorDashboard({
   lead?: string;
 }) {
   const { client, staff } = await requireStaff(["tele_counsellor"]);
+  const { data: home } = await client.from("branches").select("name,secure_calling,manual_calling").eq("id", staff.branch_id!).single();
+  if (!home) throw new Error("Unable to load branch calling mode.");
+  if (home.manual_calling) {
+    const {data,error}=await client.rpc("manual_desk");
+    if(error||!data) throw new Error("Unable to load your assigned lead.");
+    return <Shell name={staff.full_name} role="Tele-counsellor" branch={home.name}>
+      <PageTitle eyebrow={home.name} title="Your calling desk" text="Dial the displayed number on your phone, then select one outcome."/>
+      <ManualCallingDesk desk={data as ManualDesk} day={indiaDayBounds().end.slice(0,10)}/>
+    </Shell>;
+  }
+  if (home?.secure_calling) {
+    // Company calling: one student at a time and no phone numbers in this page.
+    const { data: desk, error } = await client.rpc("caller_desk");
+    if (error || !desk) throw new Error("Unable to load your calling desk.");
+    const provider = callProvider();
+    const value = desk as Desk;
+    return (
+      <Shell name={staff.full_name} role="Tele-counsellor" branch={home.name}>
+        <PageTitle eyebrow={home.name} title="Your calling desk" text="Call the next student through the company line and record what happened." />
+        <SecureDesk key={value.lead?.id || "none"} desk={value} callerName={staff.full_name} connected={Boolean(provider)} testMode={Boolean(provider?.test)} />
+      </Shell>
+    );
+  }
   const queue = ["to_call", "invited", "missed"].includes(tab || "")
     ? tab!
     : "to_call";

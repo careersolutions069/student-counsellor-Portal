@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ActionForm } from "@/components/action-form";
 import { Field, Select } from "@/components/fields";
 import { createStaff, toggleStaff, editStaff } from "@/app/actions";
@@ -12,6 +13,8 @@ export type Branch = {
   address: string;
   google_maps_url?: string | null;
   is_active: boolean;
+  secure_calling?: boolean;
+  manual_calling?: boolean;
 };
 function StaffFields({
   member,
@@ -108,6 +111,11 @@ export function StaffManagement({
             ? "Manage Centre Heads and Tele-counsellors across India."
             : "Manage Tele-counsellors for your branch."}
         </p>
+        {!owner && (
+          <Link href="/branch/calling" className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary">
+            Calling desk: daily targets, work phones and held leads →
+          </Link>
+        )}
       </div>
       <details className="rounded-lg border border-line p-4">
         <summary className="font-semibold text-primary">

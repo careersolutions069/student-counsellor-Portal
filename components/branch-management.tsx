@@ -83,6 +83,19 @@ export function BranchManagement({ branches }: { branches: Branch[] }) {
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
               </Select>
+              <Select
+                key={b.manual_calling ? 'manual' : String(Boolean(b.secure_calling))}
+                label="Tele-counsellor calling"
+                name="secure_calling"
+                defaultValue={b.manual_calling ? 'manual' : String(Boolean(b.secure_calling))}
+              >
+                <option value="false">Direct calls · callers see numbers</option>
+                <option value="manual">Manual desk · show one number on the computer</option>
+                <option value="true">Company calling · numbers hidden from callers</option>
+              </Select>
+              <p className="text-xs text-muted">
+                Turn on company calling only after the provider and WhatsApp invite pass the pilot test. Until then, callers in this branch cannot place calls.
+              </p>
             </ActionForm>
           </details>
         ))}

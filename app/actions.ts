@@ -525,12 +525,13 @@ export async function updateBranch(
             /^https:\/\/(www\.)?(google\.com\/maps|maps\.google\.com|maps\.app\.goo\.gl)(\/|\?|$)/,
           ),
         is_active: z.enum(["true", "false"]),
+        secure_calling: z.enum(["true", "false", "manual"]),
       })
       .parse(fields(form));
     const { id, ...details } = value;
     const { data, error } = await client
       .from("branches")
-      .update({ ...details, is_active: value.is_active === "true" })
+      .update({ ...details, is_active: value.is_active === "true", secure_calling: value.secure_calling !== "false", manual_calling: value.secure_calling === "manual" })
       .eq("id", id)
       .select("id");
     if (error || !data?.length) throw error || new Error("Branch unavailable");
