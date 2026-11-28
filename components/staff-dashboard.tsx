@@ -224,7 +224,10 @@ export async function StaffDashboard({
       name={staff.full_name}
       role={owner ? "Owner" : caller ? "Tele-counsellor" : "Centre Head"}
       branch={owner ? undefined : branches.find((b) => b.id === staff.branch_id)?.name}
-      nav={caller ? [] : tabs.map(([key, label]) => ({ href: href(key), label, current: tab === key }))}
+      nav={caller ? [] : [
+        ...tabs.map(([key, label]) => ({ href: href(key), label, current: tab === key })),
+        { href: owner && selectedBranch ? `/calling-report?branch=${selectedBranch}` : "/calling-report", label: "Daily Reports", current: false },
+      ]}
     >
       <PageTitle
         eyebrow={owner ? "Owner" : branches[0]?.name || "Your branch"}

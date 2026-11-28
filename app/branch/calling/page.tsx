@@ -31,6 +31,7 @@ export default async function Page() {
         tab("staff", "Branch Staff"),
         tab("appointments", "F2F Appointments"),
         { href: "/branch/calling", label: "Calling desk", current: true },
+        { href: "/calling-report", label: "Daily Reports", current: false },
         tab("history", "Student Transfers"),
       ]}
     >
