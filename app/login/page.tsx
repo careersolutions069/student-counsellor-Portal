@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { PasswordField } from "@/components/password-field";
 import { BrandMark, CollegeIllustration } from "@/components/brand";
 import { staffLogin, studentLogin } from "@/app/actions";
-import { configured } from "@/lib/supabase/server";
 function Hinted({
   id,
   label,
@@ -92,11 +91,6 @@ export default async function Login({
               <span className="hidden lg:inline">Sign in to The Career Solutions</span>
             </h1>
           </div>
-          {!configured() && (
-            <div role="status" className="rounded-xl border border-[#F1DDB0] bg-marigold-50 p-4 text-sm text-marigold-text">
-              Setup required. Add the Supabase settings from .env.example to .env.local and apply the database migration.
-            </div>
-          )}
           {params.error && (
             <div role="alert" className="flex gap-2.5 rounded-xl border border-[#F4C7C1] bg-danger-bg px-3.5 py-3 text-sm leading-relaxed text-danger-text">
               <AlertCircle size={20} aria-hidden="true" className="mt-px shrink-0 text-danger" />

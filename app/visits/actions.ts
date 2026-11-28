@@ -9,6 +9,7 @@ import { DOCUMENT_BUCKET, definiteUploadRollback } from '@/lib/student-documents
 import { visitSchema, validateCollegePdf, MAX_COLLEGE_PDF_SIZE } from '@/lib/visit-conversion';
 import type { Student } from '@/components/student-records';
 import type { ActionState } from '@/app/actions';
+import { userMessage } from '@/lib/errors';
 export async function saveVisitDraft(id: string, branch: string, version: string | null, next: string, fields: import('@/lib/visit-conversion').VisitDraftFields): Promise<ActionState> {
   const {client, staff} = await requireStaff(['owner', 'centre_head']);
   const {error} = await client.rpc('save_visit_draft', {
@@ -72,6 +73,6 @@ export async function saveVisitDetails(_: ActionState, form: FormData): Promise<
       const removed = await storage.remove([staged]);
       if (removed.error) console.error('Staged college PDF cleanup failed');
     }
-    return {error: error instanceof z.ZodError ? error.issues[0].message : error instanceof Error ? error.message : 'Unable to save visit details.'};
+    return {error: userMessage(error, 'Unable to save visit details. Refresh and try again.')};
   }
 }

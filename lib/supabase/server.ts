@@ -29,9 +29,18 @@ export async function staffClient() {
     },
   );
 }
+/** Server misconfiguration. Never shown to users; see the server log. */
+export class ServerConfigError extends Error {
+  constructor() {
+    super("Server configuration missing");
+    this.name = "ServerConfigError";
+  }
+}
 export function adminClient() {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY)
-    throw new Error("Server authentication is not configured.");
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("SUPABASE_SERVICE_ROLE_KEY is not set for this deployment.");
+    throw new ServerConfigError();
+  }
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY,

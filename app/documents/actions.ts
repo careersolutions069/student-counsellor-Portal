@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { requireStaff } from '@/lib/auth';
+import {userMessage} from '@/lib/errors';
 import { adminClient } from '@/lib/supabase/server';
 import { documentActor,accessDocument } from '@/lib/document-access';
 import { DOCUMENT_BUCKET,DOCUMENT_STATUSES,MAX_DOCUMENT_SIZE,validateDocumentFile,definiteUploadRollback } from '@/lib/student-documents';
@@ -12,7 +13,7 @@ function refreshDocuments() {
  for(const path of ['/branch','/owner','/student']) revalidatePath(path);
 }
 function failure(error:unknown):ActionState {
- return {error:error instanceof z.ZodError ? error.issues[0].message : error instanceof Error ? error.message : 'Unable to save. Refresh and try again.'};
+ return {error:userMessage(error,'Unable to save. Refresh and try again.')};
 }
 export async function toggleStudentUploads(_:ActionState,form:FormData):Promise<ActionState> {
  const {client}=await requireStaff(['owner','centre_head']);

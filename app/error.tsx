@@ -7,7 +7,7 @@ export default function ErrorPage({ reset }: { reset: () => void }) {
         This page is temporarily unavailable
       </h1>
       <p className="my-4">
-        Check your connection and Supabase configuration, then try again.
+        Something went wrong while loading this page. Check your internet connection and try again.
       </p>
       <Button onClick={reset}>Try again</Button>
     </main>

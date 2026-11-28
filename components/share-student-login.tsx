@@ -6,7 +6,7 @@ export function ShareStudentLogin({name,registration,phone,origin}:{name:string;
  const [portalOrigin,setOrigin]=useState(origin);
  const [notice,setNotice]=useState<{text:string;ok:boolean}|null>(null);
  useEffect(()=>{if(!origin) setOrigin(window.location.origin);},[origin]);
- const message=loginMessage(name,registration,portalOrigin||'http://localhost:3000');
+ const message=loginMessage(name,registration,portalOrigin||'https://student-counsellor-portal.vercel.app');
  async function copy() {
   try {await navigator.clipboard.writeText(message);setNotice({text:'✓ Copied login details — paste them into any message.',ok:true});}
   catch {setNotice({text:'Copy didn’t work in this browser. Use Download or Email instead.',ok:false});}

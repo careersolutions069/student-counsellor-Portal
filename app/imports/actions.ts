@@ -1,6 +1,7 @@
 'use server';
 import {z} from 'zod';
 import {requireStaff} from '@/lib/auth';
+import {userMessage} from '@/lib/errors';
 import {parseLeadFile,type ImportSummary} from '@/lib/lead-import';
 import {MAX_UPLOAD_SIZE,UPLOAD_SIZE_ERROR} from '@/lib/upload-limits';
 export type ImportResult={summary?:ImportSummary;error?:string};
@@ -21,5 +22,5 @@ export async function importLeads(_:ImportResult,form:FormData):Promise<ImportRe
   const {data,error}=await client.rpc('import_calling_leads',{campaign:z.string().trim().max(150).parse(form.get('campaign')||''),target_branch:requested,file_name:fileName,lead_rows:parsed.rows,assignment_mode:mode,caller_ids:callers,source_name:source||null,received_on:received||null,consent,requeue:form.get('requeue')==='on'});
   if(error)throw Error('Import could not be confirmed. Refresh the student list before retrying. Check branch access and select active counsellors; existing student phones will be skipped on retry.');
   return {summary:data as ImportSummary};
- }catch(error){return {error:error instanceof z.ZodError?error.issues[0].message:error instanceof Error?error.message:'Unable to import leads.'};}
+ }catch(error){return {error:userMessage(error,'Unable to import leads. Refresh and try again.')};}
 }

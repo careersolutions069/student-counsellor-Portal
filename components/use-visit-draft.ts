@@ -20,9 +20,13 @@ export function useVisitDraft(id: string, branch: string, initial?: VisitDraft |
       attempt.current = request;
       try {
         const result = await saveVisitDraft(id, branch, version.current, request.next, request.fields);
-        if (result.error) throw new Error(result.error);
-      } catch (problem) {
-        setError(problem instanceof Error ? problem.message : 'Check your connection and retry.');
+        if (result.error) {
+          setError(result.error);
+          setStatus('Draft has unsaved changes');
+          return false;
+        }
+      } catch {
+        setError('Draft could not be saved. Check your connection and retry.');
         setStatus('Draft has unsaved changes');
         return false;
       }

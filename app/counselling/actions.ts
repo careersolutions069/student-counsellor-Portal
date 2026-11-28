@@ -2,6 +2,7 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { requireStaff } from '@/lib/auth';
+import { userMessage } from '@/lib/errors';
 import { adminClient } from '@/lib/supabase/server';
 import { DOCUMENT_BUCKET, definiteUploadRollback } from '@/lib/student-documents';
 import { MAX_UPLOAD_SIZE, UPLOAD_SIZE_ERROR } from '@/lib/upload-limits';
@@ -12,7 +13,7 @@ type Client = Awaited<ReturnType<typeof requireStaff>>['client'];
 const optionalId = z.uuid().nullable();
 const optionalTime = z.iso.datetime({offset:true}).nullable();
 function failure(error: unknown): ActionState {
-  return {error:error instanceof z.ZodError ? error.issues[0].message : error instanceof Error ? error.message : 'Unable to save counselling details. Refresh and try again.'};
+  return {error:userMessage(error,'Unable to save counselling details. Refresh and try again.')};
 }
 async function workspace(client:Client, studentId:string):Promise<CounsellingWorkspace> {
   z.uuid().parse(studentId);

@@ -27,6 +27,10 @@ const dob = z.iso
 function fields(form: FormData) {
   return Object.fromEntries(form.entries());
 }
+function signInUnavailable(): ActionState {
+  console.error("Sign-in unavailable: NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is not set for this deployment.");
+  return { error: "Sign-in is unavailable right now. Please try again in a few minutes." };
+}
 function failure(error: unknown): ActionState {
   if (error instanceof z.ZodError) return { error: error.issues[0].message };
   console.error(
@@ -42,8 +46,7 @@ export async function staffLogin(
   _: ActionState,
   form: FormData,
 ): Promise<ActionState> {
-  if (!configured())
-    return { error: "Configure Supabase in .env.local to enable login." };
+  if (!configured()) return signInUnavailable();
   const parsed = z
     .object({ email: z.email(), password: z.string().min(1) })
     .safeParse(fields(form));
@@ -75,8 +78,7 @@ export async function studentLogin(
   _: ActionState,
   form: FormData,
 ): Promise<ActionState> {
-  if (!configured())
-    return { error: "Configure Supabase in .env.local to enable login." };
+  if (!configured()) return signInUnavailable();
   const parsedReg = registrationSchema.safeParse(form.get("registration_number"));
   if (!parsedReg.success) return { error: "Enter a valid registration number." };
   const reg = parsedReg.data;
