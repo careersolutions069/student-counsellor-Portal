@@ -20,7 +20,7 @@ const bucket=admin.storage.from('student-documents');
 const id=randomUUID(),objects=[];
 let keep=false;
 function ok(result,label){if(result.error)throw new Error(`${label}: ${result.error.message}`);return result.data;}
-async function profile(){return ok(await head.rpc('managed_students').eq('id',id).single(),'Read manager visit');}
+async function profile(){return ok(await head.rpc('managed_students').select('*,student_visit_drafts(version,fields)').eq('id',id).single(),'Read manager visit');}
 try {
  ok(await head.auth.signInWithPassword({email:'patna.head@career.test',password:'CareerDemo!2026'}),'Head login');
  ok(await caller.auth.signInWithPassword({email:'patna.caller@career.test',password:'CareerDemo!2026'}),'Caller login');
@@ -36,11 +36,20 @@ try {
  }
  async function save(type,pdf,amount='1200.50'){
   const s=await profile();const form=new FormData();
-  for(const [key,value] of Object.entries({id,branch_id:s.branch_id,expected_pdf_path:s.college_pdf_path||'',expected_college_type:s.college_type||'',full_name:s.full_name,'F/N':'QA Parent',student_phone:s.student_phone,city:s.city,state:s.state,counselling_amount:amount,percentage_or_score:s.percentage_or_score,marks_type:'approximate',college_type:type}))form.set(key,value);
+  for(const [key,value] of Object.entries({id,draft_version:s.student_visit_drafts?.version||'',branch_id:s.branch_id,expected_pdf_path:s.college_pdf_path||'',expected_college_type:s.college_type||'',full_name:s.full_name,'F/N':'QA Parent',student_phone:s.student_phone,city:s.city,state:s.state,counselling_amount:amount,percentage_or_score:s.percentage_or_score,marks_type:'approximate',college_type:type}))form.set(key,value);
   form.append('selected_courses','MBBS');form.append('selected_courses','BDS');
   if(pdf)form.set('college_pdf',new Blob([pdf],{type:'application/pdf'}),`${type}.pdf`);
   return action('saveVisitDetails',form);
  }
+ const draftFields={city:'Draft city',college_type:'government',counselling_amount:'12.'};
+ const draftWrite={target:id,expected_branch:(await profile()).branch_id,expected_version:null,next_version:randomUUID(),draft:draftFields};
+ ok(await head.rpc('save_visit_draft',draftWrite),'Save partial visit without a PDF');
+ ok(await head.rpc('save_visit_draft',draftWrite),'Retry same save');
+ assert.deepEqual((await profile()).student_visit_drafts.fields,draftFields,'Draft restored when reopening');
+ assert.equal((await profile()).visit_details_completed,false);
+ assert.ok((await head.rpc('save_visit_draft',{...draftWrite,next_version:randomUUID()})).error,'Reject stale editor');
+ assert.ok((await caller.rpc('save_visit_draft',draftWrite)).error,'Caller cannot save draft');
+ assert.deepEqual(ok(await caller.from('student_visit_drafts').select('*').eq('student_id',id),'Caller draft access'),[]);
  assert.ok((await save('government',null)).includes('Upload a new PDF'),'Initial PDF is required on server');
  assert.ok((await save('government',Buffer.from('%PDF-1.7'),'0')).includes('amount'),'Amount must be positive');
  assert.ok((await save('government',Buffer.from('<html>spoof'))).includes('valid PDF'),'File signature is checked');
@@ -49,7 +58,7 @@ try {
  assert.equal((await profile()).college_pdf_path,null,'Rejected PDF leaves visit unchanged');
  const maxPdf=new Uint8Array(4*1024*1024);maxPdf.set(Buffer.from('%PDF-1.7\n'));
  assert.ok((await save('government',maxPdf)).includes('Visit details saved.'),'Full 4 MiB government PDF saves');
- let s=await profile();objects.push(s.college_pdf_path);
+ let s=await profile();assert.deepEqual(s.student_visit_drafts.fields,{},'Finalization clears draft');objects.push(s.college_pdf_path);
  assert.equal(s.visit_details_completed,true);assert.equal(s.registration_number,null);assert.equal(s.is_profile_complete,false);assert.equal(Number(s.counselling_amount),1200.50);
  assert.ok((await caller.from('students').select('counselling_amount').eq('id',id)).error,'Caller cannot SELECT fee');
  assert.ok((await caller.from('students').select('college_pdf_path,college_pdf_name').eq('id',id)).error,'Caller cannot SELECT college file metadata');

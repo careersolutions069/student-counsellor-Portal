@@ -15,6 +15,8 @@ export const visitSchema = z.object({
   selected_courses: z.array(z.enum(COURSES)).min(1, 'Select at least one course.').max(3).refine(value => new Set(value).size === value.length, 'Select each course only once.'),
   college_type: z.enum(['government', 'private']),
 });
+export type VisitDraftFields = Partial<Omit<z.input<typeof visitSchema>, "college_type" | "marks_type"> & {college_type: string; marks_type: string}>;
+export type VisitDraft = {version: string; fields: VisitDraftFields};
 export function selectedCourses(saved: string[] | undefined, target: string | null | undefined) {
   return saved?.length ? saved : [...new Set((target || '').toUpperCase().match(/\b(MBBS|BDS|BAMS)\b/g) || [])];
 }

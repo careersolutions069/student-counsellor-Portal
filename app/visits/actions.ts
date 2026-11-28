@@ -9,7 +9,17 @@ import { DOCUMENT_BUCKET, definiteUploadRollback } from '@/lib/student-documents
 import { visitSchema, validateCollegePdf, MAX_COLLEGE_PDF_SIZE } from '@/lib/visit-conversion';
 import type { Student } from '@/components/student-records';
 import type { ActionState } from '@/app/actions';
-export async function saveVisitDetails(_: ActionState, form: FormData): Promise<ActionState> {
+export async function saveVisitDraft(id: string, branch: string, version: string | null, next: string, fields: import('@/lib/visit-conversion').VisitDraftFields): Promise<ActionState> {
+  const {client, staff} = await requireStaff(['owner', 'centre_head']);
+  const {error} = await client.rpc('save_visit_draft', {
+    target: id, expected_branch: branch, expected_version: version, next_version: next, draft: fields,
+  });
+  if (error) return {error: error.code === '40001' ? 'Another save changed this visit. Reopen the record before editing.' : 'Draft could not be saved. Check your access and connection, then retry.'};
+  revalidatePath(staff.role === 'owner' ? '/owner' : '/branch');
+  return {success: 'Draft saved'};
+}
+
+export async function saveVisitDetails(_: ActionState, form: FormData): Promise<ActionState & {version?: string}> {
   const { client } = await requireStaff(['owner', 'centre_head']);
   const storage = adminClient().storage.from(DOCUMENT_BUCKET);
   let staged: string | undefined;
@@ -40,7 +50,8 @@ export async function saveVisitDetails(_: ActionState, form: FormData): Promise<
       throw new Error('Upload a new PDF for the selected college type.');
     }
     finalizing = true;
-    const result = await client.rpc('save_visit_details', {
+    const result = await client.rpc('finalize_visit_draft', {
+      expected_version: z.uuid().nullable().parse(form.get('draft_version') || null),
       target: id, details, expected_branch: expectedBranch, expected_pdf_path: expectedPath,
       expected_college_type: expectedType, new_pdf_path: staged || null, new_pdf_name: filename,
     });
@@ -49,12 +60,12 @@ export async function saveVisitDetails(_: ActionState, form: FormData): Promise<
       throw new Error('Unable to confirm the save. Refresh to check the visit and your access before retrying.');
     }
     staged = undefined;
-    if (result.data) {
-      const removed = await storage.remove([result.data]);
+    if (result.data.old_path) {
+      const removed = await storage.remove([result.data.old_path]);
       if (removed.error) console.error('Old college PDF cleanup failed', id);
     }
     for (const path of ['/branch', '/owner', '/counsellor', '/student']) revalidatePath(path);
-    return {success: 'Visit details saved. Registration can be generated separately after entering DOB.'};
+    return {version: result.data.version, success: 'Visit details saved. Registration can be generated separately after entering DOB.'};
   } catch (error) {
     // Preserve possibly committed files on unknown transport failures; reconcile orphan objects during maintenance.
     if (staged && (!finalizing || definiteUploadRollback(finalizationError))) {

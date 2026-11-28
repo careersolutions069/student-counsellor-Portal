@@ -41,6 +41,7 @@ export type Student = {
   college_pdf_path?: string | null;
   college_pdf_name?: string | null;
   visit_details_completed?: boolean;
+  student_visit_drafts?: import("@/lib/visit-conversion").VisitDraft | null;
   target_course?: string | null;
   academic_stream?: string | null;
   percentage_or_score?: string | null;

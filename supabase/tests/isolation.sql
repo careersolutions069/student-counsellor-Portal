@@ -1,7 +1,7 @@
 -- Run after local reset. Every write rolls back.
 begin;
 create function pg_temp.check_ok(value boolean, message text) returns void language plpgsql as $$ begin if value is distinct from true then raise exception 'FAILED: %',message; end if; end $$;
-select pg_temp.check_ok((select count(*)=14 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity),'RLS enabled on all fourteen tables');
+select pg_temp.check_ok(not exists(select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and not c.relrowsecurity),'RLS enabled on every table');
 update public.students set "F/N"='Fixture parent',city='Patna',state='Bihar',counselling_amount=1000,percentage_or_score='610',marks_type='exact',selected_courses=array['MBBS'],college_type='government',college_pdf_path=branch_id::text||'/'||id::text||'/college-registration/test.pdf',college_pdf_name='test.pdf',visit_details_completed=true where id in ('30000000-0000-4000-8000-000000000002','30000000-0000-4000-8000-000000000004');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000002',true);

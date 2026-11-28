@@ -81,7 +81,7 @@ export async function StaffDashboard({
   let staffQuery = client.from("staff_profiles").select("*").order("full_name");
   let studentsQuery = client
     .rpc("managed_students", {}, { count: "exact" })
-    .select("*")
+    .select("*,student_visit_drafts(version,fields)")
     .order("created_at", { ascending: false })
     .order("id")
     .range(owner && tab === "history" ? 0 : (page - 1) * 25, owner && tab === "history" ? 24 : page * 25 - 1);
@@ -182,7 +182,7 @@ export async function StaffDashboard({
     const result = meetingResult;
     if (result.error) throw new Error("Unable to load appointments.");
     const ids = [...new Set((result.data || []).map(m => m.student_id))];
-    const profiles = ids.length ? await client.rpc("managed_students").in("id", ids) : {data: [], error: null};
+    const profiles = ids.length ? await client.rpc("managed_students").select("*,student_visit_drafts(version,fields)").in("id", ids) : {data: [], error: null};
     if (profiles.error) throw new Error("Unable to load appointment profiles.");
     meetings = (result.data || []).map(m => ({...m, students: (profiles.data as Student[]).find(s => s.id === m.student_id) || null})) as Meeting[];
     recordCount = result.count || 0;
